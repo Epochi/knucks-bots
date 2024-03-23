@@ -136,13 +136,17 @@ class AbstractAgent(ABC):
         self.player_number = player_number
 
     @abstractmethod
-    def select_move(self, game_board, dice_value):
+    def select_move(
+        self, game_board_state, my_score, opponent_score, dice_value, available_moves
+    ):
         """
         Determines the move to make based on the game state and dice value.
 
-        :param game_board: The current state of the game board, providing access to game data.
-        :param dice_value: The result of the dice roll for this turn.
-        :return: A tuple (row, col) indicating the chosen move.
+        :param game_board_state: The current state of the game board.
+        :param my_score: The current score of the agent's player.
+        :param opponent_score: The current score of the opponent player.
+        :param dice_value: The value of the rolled dice.
+        :param available_moves: A list of tuples representing the available moves.
         """
 
     def get_player_available_moves(self, game_board):
@@ -171,7 +175,13 @@ class AbstractAgent(ABC):
         :param dice_value: The result of the dice roll for this turn.
         :return: A tuple (row, col) indicating the chosen move.
         """
-        return self.select_move(game_board, dice_value)
+        game_board_state = game_board.get_board_from_1p_pov(self.player_number)
+        available_moves = game_board.get_available_moves_from_1p_pov(self.player_number)
+        my_score, opponent_score = game_board.calculate_score()
+
+        return self.select_move(
+            game_board_state, my_score, opponent_score, dice_value, available_moves
+        )
 
 
 # def q_learning_strategy(game_board, dice_value):

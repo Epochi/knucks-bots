@@ -3,6 +3,7 @@ Game Board Module
 """
 
 import random
+import copy
 
 
 class GameBoard:
@@ -143,6 +144,7 @@ class GameBoard:
             return self.get_available_moves()[0]
         elif player == 2:
             # Return the available moves for player 2 as if they were player 1
+            # so if row is 3 it becomes 0, if row is 4 it becomes 1, if row is 5 it becomes 2
             return [(row - 3, col) for row, col in self.get_available_moves()[1]]
 
     def get_board_from_1p_pov(self, player):
@@ -153,9 +155,9 @@ class GameBoard:
         :return: The current state of the board from the perspective of the player.
         """
         if player == 1:
-            return self.board
+            return copy.deepcopy(self.board)
         elif player == 2:
-            return [row[::-1] for row in self.board[::-1]]
+            return [row[::-1] for row in copy.deepcopy(self.board)[::-1]]
 
     def get_place_dice_from_1p_pov(self, player):
         """
@@ -169,6 +171,10 @@ class GameBoard:
         elif player == 2:
 
             def place_dice(row, col, value):
+                # Reverse the row so if row is 0, it becomes 3
+                # if row is 1, it becomes 4
+                # if row is 2, it becomes 5
+
                 row = row + 3
                 self.place_dice(row, col, value)
 

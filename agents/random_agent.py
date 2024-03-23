@@ -9,8 +9,9 @@ class RandomAgent(AbstractAgent):
     A simple agent that selects its move randomly from available moves.
     """
 
-    def select_move(self, game_board, dice_value):
-        available_moves = self.get_player_available_moves(game_board)
+    def select_move(
+        self, game_board_state, my_score, opponent_score, dice_value, available_moves
+    ):
         if not available_moves:
             # throw error, invalid path
             raise ValueError("No available moves, Invalid path")
