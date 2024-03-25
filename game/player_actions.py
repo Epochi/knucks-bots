@@ -128,3 +128,10 @@ def get_current_player(engine: GameEngine):
     :return: current player
     """
     return engine.current_player
+
+
+def display_board(engine: GameEngine):
+    """
+    Display the current game board
+    """
+    engine.game_board.display()

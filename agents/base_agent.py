@@ -17,6 +17,8 @@ class AbstractAgent(ABC):
         self.q_table = {}
         if q_table_path:
             self.load_q_table(q_table_path)
+            print("Q-Table loaded successfully.")
+            print(f"Q-Table size: {len(self.q_table)}")
 
     @abstractmethod
     def select_move(self, game_engine):
@@ -43,5 +45,6 @@ class AbstractAgent(ABC):
         return "".join(str(col) for row in board_state for col in row) + str(dice_value)
 
     def load_q_table(self, path):
+        """Load the Q-Table from a file."""
         with open(path, "rb") as file:
             self.q_table = pickle.load(file)

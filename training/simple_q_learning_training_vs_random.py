@@ -1,7 +1,9 @@
 """Train a Q-Learning agent against a random agent"""
 
+import os
 import pickle
 import time
+import objgraph
 import game.player_actions as pa
 import training.reward_models as rm
 from agents.simple_q_learning import QLearningAgent
@@ -21,15 +23,14 @@ def train_q_learning_agent(
     losses = 0
     draws = 0
 
+    heartbeat = min(10 / 100 * episodes, 10000)
     perf_timer = None
+    file_size_limit = 10000000000  # around 10GB
 
     for episode in range(episodes):
         game_engine = pa.start_game()
 
-        if episode % 1000 == 0:
-            if perf_timer:
-                print(f"Time taken for 1000 episodes: {time.time() - perf_timer}")
-            perf_timer = time.time()
+        is_heartbeat = episode % heartbeat == 0
 
         while not pa.get_game_over(game_engine):
             pa.start_turn(game_engine)
@@ -77,15 +78,36 @@ def train_q_learning_agent(
                 draws += 1
 
         # sanity check, print game every 10% of the episodes, but not more rarely than 1000
-        if episode % min(episodes // 10, 1000) == 0:
+        if is_heartbeat:
             print(f"Episode {episode}/{episodes}")
-            print(f"Wins: {wins}, Losses: {losses}, Draws: {draws}")
 
-        # Save the trained Q-Table every 1000 games
-        # (Nightly run security)
-        if episode % 1000 == 0:
+            print("\nPerformance stats:")
+            if perf_timer:
+                print(
+                    f"Time taken for {heartbeat} episodes: {time.time() - perf_timer}"
+                )
+            objgraph.show_most_common_types()
+            perf_timer = time.time()
+            print(f"keys in q_table: {len(q_agent.q_table)}")
+
+            print("\nMotivation Stats:")
+            print(f"Wins: {wins}, Losses: {losses}, Draws: {draws}")
+            print(
+                "We just won!" if pa.get_winner(game_engine) == 1 else "We just lost!"
+            )
+            print(
+                f"Scores: Player 1: {pa.get_score(game_engine)[0]}, Player 2: {pa.get_score(game_engine)[1]}"
+            )
+            pa.display_board(game_engine)
+
+            # (Nightly run security)
             with open(f"{save_path}", "wb") as f:
                 pickle.dump(q_agent.q_table, f)
+
+            if os.path.getsize(save_path) > file_size_limit:
+                print(f"Q-Table size exceeds {file_size_limit}, saving to {save_path}")
+                # exit early
+                break
 
     # Save the trained Q-Table
     with open(save_path, "wb") as f:
@@ -98,7 +120,7 @@ def train_q_learning_agent(
 if __name__ == "__main__":
     train_q_learning_agent(
         rm.calculate_for_score,
-        episodes=100000,
+        episodes=1000000,
         save_path="./models/q_learning_model_by_score.pkl",
         resume_model_from_path="./models/q_learning_model_by_score.pkl",
     )

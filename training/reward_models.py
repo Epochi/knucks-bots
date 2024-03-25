@@ -72,20 +72,15 @@ def calculate_for_score(
 
     reward = 0
     player_score_diff = new_scores[0] - prev_scores[0]
-    player_vs_opponent_score_diff = new_scores[0] - new_scores[1]
     opponent_score_diff = new_scores[1] - prev_scores[1]
 
-    # if player increased the score, reward well
+    # if player increased the score, reward very well
     if player_score_diff > 0:
-        reward += player_score_diff / 2
+        reward += player_score_diff
 
     # if player decreased the score of the opponent, reward very well
     if opponent_score_diff < 0:
         reward += abs(opponent_score_diff)
-
-    # if player has more points than the opponent, reward ok
-    if player_vs_opponent_score_diff > 0:
-        reward += player_vs_opponent_score_diff / 3
 
     if pa.get_game_over(game_engine):
         if game_engine.winner == 1:

@@ -19,7 +19,7 @@ class QLearningAgent(AbstractAgent):
         exploration_decay=0.99,
         min_exploration_rate=0.01,
     ):
-        super().__init__()
+        super().__init__(q_table_path=q_table_path)
         self.learning_rate = learning_rate
         self.discount_factor = discount_factor
         self.exploration_rate = exploration_rate
@@ -82,13 +82,21 @@ class QLearningAgent(AbstractAgent):
 
         max_future_reward = 0
 
-        # Iterate through all states in the Q-table
-        for state, actions in self.q_table.items():
-            # Check if the state matches the base_state, ignoring the dice roll
-            if state.startswith(possible_new_states_prefix):
-                # Find the maximum Q-value among actions in this matching state
-                max_reward_for_state = max(actions.values())
-                # Update the maximum future reward if this state has a higher value
+        # # Iterate through all states in the Q-table
+        # for state, actions in self.q_table.items():
+        #     # Check if the state matches the base_state, ignoring the dice roll
+        #     if state.startswith(possible_new_states_prefix):
+        #         # Find the maximum Q-value among actions in this matching state
+        #         max_reward_for_state = max(actions.values())
+        #         # Update the maximum future reward if this state has a higher value
+        #         max_future_reward = max(max_future_reward, max_reward_for_state)
+
+        # performance optimization, went from 60s to 1-2s
+        # get all possible future states by adding dice values from 1 to 6 to possible new states prefix
+        possible_new_states = [possible_new_states_prefix + str(i) for i in range(1, 7)]
+        for state in possible_new_states:
+            if state in self.q_table:
+                max_reward_for_state = max(self.q_table[state].values())
                 max_future_reward = max(max_future_reward, max_reward_for_state)
 
         new_q_value = current_q_value + self.learning_rate * (
