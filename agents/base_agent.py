@@ -2,6 +2,7 @@
 
 from abc import ABC, abstractmethod
 import pickle
+import os
 
 
 class AbstractAgent(ABC):
@@ -46,7 +47,12 @@ class AbstractAgent(ABC):
 
     def load_q_table(self, path):
         """Load the Q-Table from a file."""
+        # Check if file exists
+        if not os.path.exists(path):
+            print(
+                f"Warning: File {path} does not exist. Starting with an empty Q-table."
+            )
+            return
+
         with open(path, "rb") as file:
-            if not file:
-                return
             self.q_table = pickle.load(file)
