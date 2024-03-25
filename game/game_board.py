@@ -7,7 +7,7 @@ import copy
 
 
 class GameBoard:
-    """Class for interacting with the game board."""
+    """Class for representing state of the game board."""
 
     def __init__(self):
         # Initialize a 6x3 board, representing two 3x3 grids for two players.
@@ -158,27 +158,6 @@ class GameBoard:
             return copy.deepcopy(self.board)
         elif player == 2:
             return [row[::-1] for row in copy.deepcopy(self.board)[::-1]]
-
-    def get_place_dice_from_1p_pov(self, player):
-        """
-        Get the place_dice function from the perspective of a player.
-
-        :param player: The player's perspective to return the place_dice function.
-        :return: The place_dice function from the perspective of the player.
-        """
-        if player == 1:
-            return self.place_dice
-        elif player == 2:
-
-            def place_dice(row, col, value):
-                # Reverse the row so if row is 0, it becomes 3
-                # if row is 1, it becomes 4
-                # if row is 2, it becomes 5
-
-                row = row + 3
-                self.place_dice(row, col, value)
-
-            return place_dice
 
     def display(self):
         """

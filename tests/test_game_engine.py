@@ -13,7 +13,7 @@ class TestGameEngine(unittest.TestCase):
     def setUp(self):
         self.game_engine = GameEngine()
         # Mocking the GameBoard used within GameEngine
-        self.game_engine.game_board = MagicMock()
+        self.game_engine.game_board = unittest.mock.MagicMock()
         self.game_engine.game_board.roll_dice.return_value = 4
         self.game_engine.game_board.calculate_score.return_value = [15, 20]
 
