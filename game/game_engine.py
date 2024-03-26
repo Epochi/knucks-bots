@@ -25,14 +25,6 @@ class GameEngine:
         if self.enable_print:
             print(*args, **kwargs)
 
-    def roll_dice(self):
-        """
-        Roll a dice for the current player.
-
-        :return: The value of the rolled dice (1-6).
-        """
-        return self.game_board.roll_dice()
-
     def switch_player(self):
         """Switch the current player."""
         self.current_player = 2 if self.current_player == 1 else 1
@@ -58,7 +50,7 @@ class GameEngine:
         if self.game_over:
             raise ValueError("The game is already over.")
 
-        self.dice_value = self.roll_dice()
+        self.dice_value = self.game_board.roll_dice()
         self.print(f"Player {self.current_player} rolled a {self.dice_value}.")
 
     def do_move(self, row, col):
@@ -93,4 +85,5 @@ class GameEngine:
         self.check_game_over()
 
         self.dice_value = None
-        self.switch_player()
+        if not self.game_over:
+            self.switch_player()
