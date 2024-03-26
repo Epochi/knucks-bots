@@ -39,6 +39,12 @@ class TestGameBoard(unittest.TestCase):
             self.board.board[0][0], 3, "The dice was not placed correctly on the board."
         )
 
+    def test_place_dice_invalid_move(self):
+        """Test placing a dice on an invalid spot on the board."""
+        with self.assertRaises(ValueError):
+            self.board.place_dice(0, 0, 3)
+            self.board.place_dice(0, 0, 3)
+
     def test_place_dice_remove_oppoent_dice_after_placing(self):
         """Test placing a dice on the board and removing the opponent's dice."""
         self.board.place_dice(3, 0, 3)

@@ -17,7 +17,7 @@ class TestGameEngine(unittest.TestCase):
         """Test if roll_dice method returns a value"""
         board_state = [[1, 2, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 1]]
         dice_value = 4
-        state = self.q_agent.state_to_string(board_state, dice_value)
+        state = self.q_agent.convert_state(board_state, dice_value)
         self.assertEqual(state, "1200000000000000014")
 
     def test_update_q_table(self):
@@ -106,5 +106,4 @@ class TestGameEngine(unittest.TestCase):
         q_agent.q_table["1200000000000000014"] = {(1, 0): 1, (1, 1): 2, (1, 2): 3}
 
         action = q_agent.select_move(game_engine)
-        print("Actionnnn: ", action)
         self.assertEqual(action, (1, 2))
