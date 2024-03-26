@@ -8,17 +8,20 @@ import objgraph
 import game.player_actions as pa
 import training.reward_models as rm
 from agents.simple_q_learning import QLearningAgent
+from agents.simple_q_learning_state_optimized import QLearningAgentSpaceOptimized
+
 from agents.random_agent import RandomAgent
 
 
 def train_q_learning_agent(
+    agent=None,
     reward_func=None,
     episodes=1000,
     save_path="./models/q_learning_model.pkl",
     resume_model_from_path=None,
 ):
     """train Q-Learning agent against a random agent"""
-    q_agent = QLearningAgent(resume_model_from_path)
+    q_agent = agent(resume_model_from_path)
     random_agent = RandomAgent()
     wins = 0
     losses = 0
@@ -119,10 +122,21 @@ def save_q_table(q_table, save_path):
         pickle.dump(q_table, file)
 
 
+# python training/simple_q_learning_training_vs_random.py
+
+# if __name__ == "__main__":
+#     train_q_learning_agent(
+#         QLearningAgent,
+#         rm.calculate_for_score,
+#         episodes=20 * 1000 * 1000,
+#         save_path="./models/q_learning_model_by_score.pkl",
+#         resume_model_from_path="./models/q_learning_model_by_score.pkl",
+#     )
 if __name__ == "__main__":
     train_q_learning_agent(
+        QLearningAgentSpaceOptimized,
         rm.calculate_for_score,
         episodes=20 * 1000 * 1000,
-        save_path="./models/q_learning_model_by_score.pkl",
-        resume_model_from_path="./models/q_learning_model_by_score.pkl",
+        save_path="./models/q_learning_model_by_score_space_optmized.pkl",
+        resume_model_from_path="./models/q_learning_model_by_score_space_optmized.pkl",
     )
