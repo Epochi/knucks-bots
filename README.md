@@ -38,3 +38,4 @@ Knucklebones is a two player dice game from the videya game Cult of the Lamb.
 * /notebooks - jupyter notebooks comparing different model win rates
 * /tests - unit tests
 * /play - files for manual play against one of the models
+

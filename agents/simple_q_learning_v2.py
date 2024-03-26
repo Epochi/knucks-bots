@@ -1,15 +1,13 @@
-"""Simple Q-Learning Agent with optimized state Module"""
+"""Simple Q-Learning Agent Module"""
 
 import random
-from agents.base_agent import AbstractAgent
-import game.player_actions as pa
+from agents.base_agent_v2 import AbstractAgent
+import game.player_actions_v2 as pa
 
 
-class QLearningAgentSpaceOptimized(AbstractAgent):
+class QLearningAgent(AbstractAgent):
     """
-    This agent is using simple Q learning to learn how to play the game.
-    But it has state optimization, where columns in the state are sorted
-        and we only keep the column selection as the action.
+    An agent that learns to play the game using Q-Learning.
     """
 
     def __init__(
@@ -22,6 +20,7 @@ class QLearningAgentSpaceOptimized(AbstractAgent):
         min_exploration_rate=0.01,
     ):
         super().__init__(q_table_path=q_table_path)
+        self.nickname = "Cell, the Brain Cell"
         self.learning_rate = learning_rate
         self.discount_factor = discount_factor
         self.exploration_rate = exploration_rate
@@ -55,24 +54,12 @@ class QLearningAgentSpaceOptimized(AbstractAgent):
             action = random.choice(available_moves)
         else:
             q_values = self.q_table[state]
-            # we only need the column from the available moves
-            available_column_moves = [x[1] for x in available_moves]
+            # filter out actions from the Q-table that are not in the available moves
             available_moves_q_values = {
-                k: v for k, v in q_values.items() if k in available_column_moves
+                k: v for k, v in q_values.items() if k in available_moves
             }
-
-            # select the available column with the highest Q-value
-            column_to_select = max(
-                available_moves_q_values, key=available_moves_q_values.get
-            )
-            # select any row from the available moves for the selected column
-            action = random.choice(
-                [
-                    (row, column_to_select)
-                    for row, col in available_moves
-                    if col == column_to_select
-                ]
-            )
+            # select the available action with the highest Q-value
+            action = max(available_moves_q_values, key=available_moves_q_values.get)
 
         return action
 
@@ -83,19 +70,29 @@ class QLearningAgentSpaceOptimized(AbstractAgent):
 
         # Ensure the state entries exist in the Q-table
         if prev_state not in self.q_table:
-            self.q_table[prev_state] = {action[1]: 0}
+            self.q_table[prev_state] = {action: 0}
 
         if action not in self.q_table[prev_state]:
-            self.q_table[prev_state][action[1]] = 0
+            self.q_table[prev_state][action] = 0
 
         # update Q-Value for the taken action in the previous state
-        current_q_value = self.q_table[prev_state][action[1]]
+        current_q_value = self.q_table[prev_state][action]
 
         # to get max future reward we need to ignore the dice value from the state
         possible_new_states_prefix = new_state[:-1]
 
         max_future_reward = 0
 
+        # # Iterate through all states in the Q-table
+        # for state, actions in self.q_table.items():
+        #     # Check if the state matches the base_state, ignoring the dice roll
+        #     if state.startswith(possible_new_states_prefix):
+        #         # Find the maximum Q-value among actions in this matching state
+        #         max_reward_for_state = max(actions.values())
+        #         # Update the maximum future reward if this state has a higher value
+        #         max_future_reward = max(max_future_reward, max_reward_for_state)
+
+        # performance optimization, went from 60s to 1-2s
         # get all possible future states by adding dice values from 1 to 6 to possible new states prefix
         possible_new_states = [possible_new_states_prefix + str(i) for i in range(1, 7)]
         for state in possible_new_states:
@@ -107,49 +104,9 @@ class QLearningAgentSpaceOptimized(AbstractAgent):
             reward + self.discount_factor * max_future_reward - current_q_value
         )
 
-        self.q_table[prev_state][action[1]] = new_q_value
+        self.q_table[prev_state][action] = new_q_value
 
         # Update exploration rate
         self.exploration_rate = max(
             self.min_exploration_rate, self.exploration_rate * self.exploration_decay
         )
-
-    def convert_state(self, board_state, dice_value):
-        """
-        Sort the columns in the board state for each player separately and convert the state to a string.
-        """
-        # TODO: this is very slow, we can optimize this further, need to explore
-        sort_player_1_board_state = _sort_grid_columns(board_state[:3])
-        sort_player_2_board_state = _sort_grid_columns(board_state[3:])
-
-        sorted_board_state = sort_player_1_board_state + sort_player_2_board_state
-        return "".join(str(col) for row in board_state for col in row) + str(
-            dice_value
-        )
-
-def _sort_grid_columns(grid):
-    """
-    Sorts the columns of a 2D grid based on the values in each column without moving the rows.
-    try to optimize the sorting by using numpy
-    """
-    import numpy as np
-    grid = np.array(grid)
-    sorted_grid = np.sort(grid, axis=0)[::-1]
-    return sorted_grid
-
-def _sort_grid_columns_v1(grid):
-    """
-    Sorts the columns of a 2D grid based on the values in each column without moving the rows.
-    The sorting is done in descending order, with higher values positioned at the top of the grid.
-
-    :param grid: A list of lists representing the 2D grid.
-    :return: A new grid with columns sorted according to their values.
-    """
-    # Transpose the grid to work with columns as lists
-    transposed_grid = list(zip(*grid))
-    # Sort each column individually in descending order
-    sorted_transposed = [sorted(column, reverse=True) for column in transposed_grid]
-    # Transpose back to the original grid structure
-    # we don't need to do this, we can just return the sorted_transposed
-    # sorted_grid = list(map(list, zip(*sorted_transposed)))
-    return sorted_transposed
