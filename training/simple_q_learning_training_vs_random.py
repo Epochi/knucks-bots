@@ -27,6 +27,9 @@ def train_q_learning_agent(
     losses = 0
     draws = 0
 
+    prev_player = 0
+    current_player = 0
+
     heartbeat = min(10 / 100 * episodes, 10000)
     perf_timer = None
     file_size_limit = 10000000000  # around 10GB
@@ -34,12 +37,20 @@ def train_q_learning_agent(
 
     for episode in range(episodes):
         game_engine = pa.start_game()
+        current_player = "x"
+        prev_player = None
 
         is_heartbeat = episode % heartbeat == 0
 
         while not pa.get_game_over(game_engine):
             pa.start_turn(game_engine)
             dice_value = pa.get_dice_value(game_engine)
+
+            if prev_player == current_player:
+                raise ValueError("Player did not change after turn")
+
+            prev_player = current_player
+            current_player = pa.get_current_player(game_engine)
 
             # agent always as player 1
             if pa.get_current_player(game_engine) == 1:
@@ -91,7 +102,7 @@ def train_q_learning_agent(
                 print(
                     f"Time taken for {heartbeat} episodes: {time.time() - perf_timer}"
                 )
-            objgraph.show_most_common_types()
+            # objgraph.show_most_common_types()
             perf_timer = time.time()
             print(f"keys in q_table: {len(q_agent.q_table)}")
 
@@ -100,10 +111,15 @@ def train_q_learning_agent(
             print(
                 "We just won!" if pa.get_winner(game_engine) == 1 else "We just lost!"
             )
+            print(f"Board: {game_engine.game_board.board}")
             print(
-                f"Scores: Player 1: {pa.get_score(game_engine)[0]}, Player 2: {pa.get_score(game_engine)[1]}"
+                f"Scores: Player 1: {game_engine.game_board.calculate_score()[0]}, Player 2: {game_engine.game_board.calculate_score()[1]}"
             )
             pa.display_board(game_engine)
+
+            print("\nLearning Stats:")
+            print(f"learning rate: {q_agent.learning_rate}")
+            print(f"exploration rate: {q_agent.exploration_rate}")
 
             if os.path.getsize(save_path) > file_size_limit:
                 print(f"Q-Table size exceeds {file_size_limit}, saving to {save_path}")

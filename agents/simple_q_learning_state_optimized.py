@@ -15,11 +15,11 @@ class QLearningAgentSpaceOptimized(AbstractAgent):
     def __init__(
         self,
         q_table_path=None,
-        learning_rate=0.1,
+        learning_rate=0.3,
         discount_factor=0.95,
         exploration_rate=1.0,
-        exploration_decay=0.99,
-        min_exploration_rate=0.01,
+        exploration_decay=0.999999,
+        min_exploration_rate=0.05,
     ):
         super().__init__(q_table_path=q_table_path)
         self.learning_rate = learning_rate
@@ -119,13 +119,40 @@ class QLearningAgentSpaceOptimized(AbstractAgent):
         Sort the columns in the board state for each player separately and convert the state to a string.
         """
         # TODO: this is very slow, we can optimize this further, need to explore
-        sort_player_1_board_state = _sort_grid_columns(board_state[:3])
-        sort_player_2_board_state = _sort_grid_columns(board_state[3:])
+        sort_player_1_board_state = _sort_grid_columns_v3(board_state[:3])
+        sort_player_2_board_state = _sort_grid_columns_v3(board_state[3:])
 
-        sorted_board_state = sort_player_1_board_state + sort_player_2_board_state
-        return "".join(str(col) for row in board_state for col in row) + str(
-            dice_value
-        )
+        # Concatenate the string representations
+        str_representation = sort_player_1_board_state + sort_player_2_board_state
+
+        # Append the dice value
+        state = str_representation + str(dice_value)
+        return state
+
+
+def _sort_grid_columns_v3(grid):
+    """
+    Sorts the columns of a 2D grid based on the values in each column without moving the rows.
+    try to optimize using rudamentary python
+    """
+
+    # we know there's always 3 arrays with 3 columns each
+    # we'll go collect all columns into their own list and sort it
+
+    sorted_cols = []
+    for i in range(3):
+        cols = [grid[0][i], grid[1][i], grid[2][i]]
+        cols.sort()
+        sorted_cols.append(cols)
+
+    # convert to string
+    str_representation = (
+        "".join(map(str, sorted_cols[0]))
+        + "".join(map(str, sorted_cols[1]))
+        + "".join(map(str, sorted_cols[2]))
+    )
+    return str_representation
+
 
 def _sort_grid_columns(grid):
     """
@@ -133,9 +160,11 @@ def _sort_grid_columns(grid):
     try to optimize the sorting by using numpy
     """
     import numpy as np
+
     grid = np.array(grid)
-    sorted_grid = np.sort(grid, axis=0)[::-1]
-    return sorted_grid
+    sorted_grid = np.sort(grid, axis=0)
+    return "".join(map(str, sorted_grid.flatten()))
+
 
 def _sort_grid_columns_v1(grid):
     """

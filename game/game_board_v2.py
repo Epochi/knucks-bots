@@ -21,7 +21,10 @@ class GameBoard:
         # although the rules says that we match the dice value in the same column
         # we will treat second dimension as columns and third dimension as rows
         # and change represantation in visual layer when we draw the board
-        self.board = np.zeros((2, 3, 3))
+        self.board = np.zeros((2, 3, 3),dtype=int)
+
+        self.player_1_score = 0
+        self.player_2_score = 0
 
     def roll_dice(self):
         """
@@ -58,13 +61,14 @@ class GameBoard:
         :param value: The value of the dice (1-6)
         :return: None
         """
-        if self.is_valid_move(player, col):
-            row = np.argmax(self.board[player][col] == 0)
-            self.board[player][col][row] = value
-            self.remove_opponents_dice(player, col, value)
-            np.sort(self.board[player][col], axis=0)
-        else:
-            raise ValueError("Invalid move. Spot is already occupied or out of range.")
+        # if self.is_valid_move(player, col):
+        row = np.argmax(self.board[player][col] == 0)
+        self.board[player][col][row] = value
+        self.remove_opponents_dice(player, col, value)
+        np.sort(self.board[player][col], axis=0)
+        self.player_1_score, self.player_2_score = self.calculate_score()
+        # else:
+        #     raise ValueError("Invalid move. Spot is already occupied or out of range.")
 
     def remove_opponents_dice(self, player, col, value):
         """
@@ -89,7 +93,18 @@ class GameBoard:
 
         :return: True if either side of the board is full, False otherwise.
         """
-        return np.all(self.board[0] != 0) or np.all(self.board[1] != 0)
+        def has_empty(board):
+            for col in range(3):
+                for row in range(3):
+                    if board[col][row] == 0:
+                        return True
+                   
+        player_1_has_emtpy = has_empty(self.board[0])
+        player_2_has_empty = has_empty(self.board[1])
+
+
+        return not (player_1_has_emtpy and player_2_has_empty)
+        # return not (np.any(self.board[0] == 0) & np.any(self.board[1] == 0))
 
     def calculate_score(self):
         """
@@ -97,21 +112,62 @@ class GameBoard:
 
         :return: A tuple containing the scores of player 1 and player 2 respectively.
         """
-        scores = np.zeros(2, dtype=int)
+        player_1_score = 0
+        player_2_score = 0
         # Iterate over each player
         for player in range(2):
             # Iterate over each column
             for col in range(3):
-                # Extract the column for the player, this time including zeros
+                # I hate how much faster this is than sensible implementation
                 column_values = self.board[player, col, :]
-                # Count the occurrence of each value in the column
-                unique, counts = np.unique(column_values, return_counts=True)
-                # Calculate the score for the column, skipping zeros in the scoring logic
-                column_score = sum([value**count if count > 1 and value != 0 else value for value, count in zip(unique, counts) if value != 0])
-                # Add the column score to the player's total score
-                scores[player] += column_score
+                # when all values are the same, we can calculate the score
+                if column_values[0] == column_values[1] == column_values[2] and column_values[0] != 0:
+                    if player == 0:
+                        player_1_score += column_values[0] ** 3
+                    else:
+                        player_2_score += column_values[0] ** 3
 
-        return scores
+                    continue
+                
+                # if two values are the same, we can calculate the score
+                if column_values[0] == column_values[1] and column_values[0] != 0:
+                    if player == 0:
+                        player_1_score += column_values[0] ** 2
+                        player_1_score += column_values[2]
+                    else:
+                        player_2_score += column_values[0] ** 2
+                        player_2_score += column_values[2]
+
+                    continue
+
+
+                if column_values[1] == column_values[2] and column_values[1] != 0:
+                    if player == 0:
+                        player_1_score += column_values[1] ** 2
+                        player_1_score += column_values[0]
+                    else:
+                        player_2_score += column_values[1] ** 2
+                        player_2_score += column_values[0]
+                    
+                    continue
+
+                if column_values[0] == column_values[2] and column_values[0] != 0:
+                    if player == 0:
+                        player_1_score += column_values[0] ** 2
+                        player_1_score += column_values[1]
+                    else:
+                        player_2_score += column_values[0] ** 2
+                        player_2_score += column_values[1]
+
+                    continue
+
+                # if no values are the same, we can calculate the score
+                if player == 0:
+                    player_1_score += sum(column_values)
+                else:
+                    player_2_score += sum(column_values)
+
+        return player_1_score, player_2_score
 
     def get_available_moves(self):
         """
@@ -119,13 +175,26 @@ class GameBoard:
 
         :return: A tuple containing the available array of moves for player 1 and player 2 respectively.
         """
-        moves = [[], []]
-        for player in range(2):
+        
+        def can_move_to_cols(board):
+            moves = []
             for col in range(3):
-                if np.any(self.board[player][col] == 0):
-                    moves[player].append(col)
+                for row in range(3):
+                    if board[col][row] == 0:
+                        moves.append(col)
+                        break
+                   
+        player_1_moves = can_move_to_cols(self.board[0])
+        player_2_moves = can_move_to_cols(self.board[1])
 
-        return moves
+        # moves = [[], []]
+        # for player in range(2):
+        #     for col in range(3):
+        #         if np.any(self.board[player][col] == 0):
+        #             moves[player].append(col)
+
+        print(player_1_moves, player_2_moves)
+        return [player_1_moves, player_2_moves]
 
     def display(self):
         """
