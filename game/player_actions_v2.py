@@ -80,13 +80,12 @@ def get_score(engine: GameEngine):
     :param engine: game engine
     :return: player score, opponent score
     """
-    player_1_score, player_2_score = engine.game_board.calculate_score()
     if engine.current_player == 0:
-        player_score = player_1_score
-        opponent_score = player_2_score
+        player_score = engine.game_board.player_1_score
+        opponent_score = engine.game_board.player_2_score
     else:
-        player_score = player_2_score
-        opponent_score = player_1_score
+        player_score = engine.game_board.player_2_score
+        opponent_score = engine.game_board.player_1_score
     return player_score, opponent_score
 
 

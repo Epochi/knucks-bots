@@ -33,7 +33,7 @@ class GameEngine:
         """Check if the game is over and set the winner if it is."""
         if self.game_board.check_full():
             self.game_over = True
-            scores = self.game_board.calculate_score()
+            scores = self.game_board.player_1_score, self.game_board.player_2_score
             if scores[0] > scores[1]:
                 self.winner = 0
             elif scores[1] > scores[0]:
