@@ -3,6 +3,7 @@
 import os
 import pickle
 import time
+import atexit
 import objgraph
 import game.player_actions as pa
 import training.reward_models as rm
@@ -26,6 +27,7 @@ def train_q_learning_agent(
     heartbeat = min(10 / 100 * episodes, 10000)
     perf_timer = None
     file_size_limit = 10000000000  # around 10GB
+    atexit.register(lambda: save_q_table(q_agent.q_table, save_path))
 
     for episode in range(episodes):
         game_engine = pa.start_game()
@@ -100,27 +102,27 @@ def train_q_learning_agent(
             )
             pa.display_board(game_engine)
 
-            # (Nightly run security)
-            with open(f"{save_path}", "wb") as f:
-                pickle.dump(q_agent.q_table, f)
-
             if os.path.getsize(save_path) > file_size_limit:
                 print(f"Q-Table size exceeds {file_size_limit}, saving to {save_path}")
                 # exit early
                 break
 
-    # Save the trained Q-Table
-    with open(save_path, "wb") as f:
-        pickle.dump(q_agent.q_table, f)
+    save_q_table(q_agent.q_table, save_path)
 
     print(f"Training completed. Wins: {wins}, Losses: {losses}, Draws: {draws}")
     print(f"Model saved to {save_path}")
 
 
+def save_q_table(q_table, save_path):
+    """Save the Q-Table to a file."""
+    with open(save_path, "wb") as file:
+        pickle.dump(q_table, file)
+
+
 if __name__ == "__main__":
     train_q_learning_agent(
         rm.calculate_for_score,
-        episodes=1000000,
+        episodes=20 * 1000 * 1000,
         save_path="./models/q_learning_model_by_score.pkl",
         resume_model_from_path="./models/q_learning_model_by_score.pkl",
     )
