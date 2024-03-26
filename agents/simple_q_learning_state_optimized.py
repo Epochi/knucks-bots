@@ -124,6 +124,7 @@ class QLearningAgentSpaceOptimized(AbstractAgent):
         """
         Sort the columns in the board state for each player separately and convert the state to a string.
         """
+        # TODO: this is very slow, we can optimize this further, need to explore
         sort_player_1_board_state = _sort_grid_columns(board_state[:3])
         sort_player_2_board_state = _sort_grid_columns(board_state[3:])
 
@@ -146,5 +147,6 @@ def _sort_grid_columns(grid):
     # Sort each column individually in descending order
     sorted_transposed = [sorted(column, reverse=True) for column in transposed_grid]
     # Transpose back to the original grid structure
-    sorted_grid = list(map(list, zip(*sorted_transposed)))
-    return sorted_grid
+    # we don't need to do this, we can just return the sorted_transposed
+    # sorted_grid = list(map(list, zip(*sorted_transposed)))
+    return sorted_transposed
