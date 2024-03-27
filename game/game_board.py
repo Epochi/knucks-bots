@@ -9,10 +9,22 @@ import copy
 class GameBoard:
     """Class for representing state of the game board."""
 
-    def __init__(self):
+    def __init__(self, max_dice_value, should_remove_opponents_dice, safe_mode):
         # Initialize a 6x3 board, representing two 3x3 grids for two players.
         # The board is initialized with undefined's indicating empty spaces.
         self.board = [[0 for _ in range(3)] for _ in range(6)]
+
+        if max_dice_value is None:
+            max_dice_value = 6
+        self.max_dice_value = max_dice_value
+
+        if should_remove_opponents_dice is None:
+            should_remove_opponents_dice = True
+        self.should_remove_opponents_dice = should_remove_opponents_dice
+
+        if safe_mode is None:
+            safe_mode = True
+        self.safe_mode = safe_mode
 
     def roll_dice(self):
         """
@@ -20,7 +32,7 @@ class GameBoard:
 
         :return: The value of the dice (1-6).
         """
-        return random.randint(1, 6)
+        return random.randint(1, self.max_dice_value)
 
     def place_dice(self, row, col, value):
         """
@@ -31,11 +43,19 @@ class GameBoard:
         :param value: The value of the dice (1-6)
         :return: None
         """
-        if self.is_valid_move(row, col):
-            self.board[row][col] = value
-            self.remove_opponents_dice(row, col, value)
+        if self.safe_mode:
+            if self.is_valid_move(row, col):
+                self.board[row][col] = value
+                if self.should_remove_opponents_dice:
+                    self.remove_opponents_dice(row, col, value)
+            else:
+                raise ValueError(
+                    "Invalid move. Spot is already occupied or out of range."
+                )
         else:
-            raise ValueError("Invalid move. Spot is already occupied or out of range.")
+            self.board[row][col] = value
+            if self.should_remove_opponents_dice:
+                self.remove_opponents_dice(row, col, value)
 
     def is_valid_move(self, row, col):
         """
@@ -155,9 +175,13 @@ class GameBoard:
         :return: The current state of the board from the perspective of the player.
         """
         if player == 1:
-            return copy.deepcopy(self.board)
+            if self.safe_mode:
+                return copy.deepcopy(self.board)
+            return self.board
         elif player == 2:
-            return [row[::-1] for row in copy.deepcopy(self.board)[::-1]]
+            if self.safe_mode:
+                return [row[::-1] for row in copy.deepcopy(self.board)[::-1]]
+            return [row[::-1] for row in self.board[::-1]]
 
     def display(self):
         """

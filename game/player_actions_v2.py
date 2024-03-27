@@ -8,7 +8,7 @@ since we randomly assign which player goes first instead.
 For simplicity, we let game engine manage current player instead of exposing it to agent or player.
 """
 
-from game.game_engine import GameEngine
+from game.game_engine_v2 import GameEngine
 
 
 def start_game(
@@ -21,9 +21,6 @@ def start_game(
     Starts a new game
 
     :param enable_print: enable print
-    :param max_dice_value: max dice value
-    :param should_remove_opponents_dice: should remove opponents dice
-    :param safe_mode: safe mode (can turn off for performance when training)
     :return: game engine
     """
     return GameEngine(
@@ -40,19 +37,16 @@ def start_turn(engine: GameEngine):
     engine.start_turn()
 
 
-def do_move(engine: GameEngine, row: int, col: int):
+def do_move(engine: GameEngine, col: int):
     """
     make a dice placement
     (if player 2, flip the board perspective and call engine do move)
 
     :param engine: game engine
-    :param row: row to place dice
     :param col: column to place dice
     :return: True if move success False otherwise
     """
-    if engine.current_player == 2:
-        row = row + 3
-    return engine.do_move(row, col)
+    return engine.do_move(col)
 
 
 def end_turn(engine: GameEngine):
@@ -70,7 +64,9 @@ def get_board_state(engine: GameEngine):
     :param engine: game engine
     :return: player board state
     """
-    return engine.game_board.get_board_from_1p_pov(engine.current_player)
+    if engine.current_player == 1:
+        return engine.game_board.player_2_board, engine.game_board.player_1_board
+    return engine.game_board.player_1_board, engine.game_board.player_2_board
 
 
 def get_dice_value(engine: GameEngine):
@@ -90,14 +86,10 @@ def get_score(engine: GameEngine):
     :param engine: game engine
     :return: player score, opponent score
     """
-    player_1_score, player_2_score = engine.game_board.calculate_score()
-    if engine.current_player == 1:
-        player_score = player_1_score
-        opponent_score = player_2_score
+    if engine.current_player == 0:
+        return engine.game_board.player_1_score, engine.game_board.player_2_score
     else:
-        player_score = player_2_score
-        opponent_score = player_1_score
-    return player_score, opponent_score
+        return engine.game_board.player_2_score, engine.game_board.player_1_score
 
 
 def get_available_moves(engine: GameEngine):
@@ -107,15 +99,30 @@ def get_available_moves(engine: GameEngine):
     :param engine: game engine
     :return: available moves
     """
-    return engine.game_board.get_available_moves_from_1p_pov(engine.current_player)
+    return engine.game_board.get_available_moves(engine.current_player)
+
+
+def did_i_win(engine: GameEngine):
+    """
+    check if you won the game
+
+    :param engine: game engine
+    :return: return if you won or not
+    """
+    if engine.game_over:
+        if engine.winner == engine.current_player:
+            return 1
+        if engine.winner == -1:
+            return 0
+        return -1
 
 
 def get_winner(engine: GameEngine):
     """
-    get winner of the game
+    check if you won the game
 
     :param engine: game engine
-    :return: winner
+    :return: return if you won or not
     """
     return engine.winner
 

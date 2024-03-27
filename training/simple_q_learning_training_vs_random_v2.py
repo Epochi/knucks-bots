@@ -5,12 +5,12 @@ import pickle
 import time
 import atexit
 import objgraph
-import game.player_actions as pa
+import game.player_actions_v2 as pa
 import training.reward_models as rm
-from agents.simple_q_learning import QLearningAgent
+from agents.simple_q_learning_v2 import QLearningAgent
 from agents.simple_q_learning_state_optimized import QLearningAgentSpaceOptimized
 
-from agents.random_agent import RandomAgent
+from agents.random_agent_v2 import RandomAgent
 
 
 def train_q_learning_agent(
@@ -21,30 +21,24 @@ def train_q_learning_agent(
     resume_model_from_path=None,
 ):
     """train Q-Learning agent against a random agent"""
-    q_agent = agent(resume_model_from_path)
+    q_agent = agent(resume_model_from_path) if resume_model_from_path else agent()
     random_agent = RandomAgent()
     wins = 0
     losses = 0
     draws = 0
 
-    prev_player = 0
-    current_player = 0
-
     heartbeat = min(10 / 100 * episodes, 10000)
     perf_timer_total_run = time.time()
     perf_timer = None
-    file_size_limit = 10000000000  # around 10GB
     atexit.register(lambda: save_q_table(q_agent.q_table, save_path))
 
     for episode in range(episodes):
         game_engine = pa.start_game(
             enable_print=False,
-            max_dice_value=3,
+            max_dice_value=6,
             should_remove_opponents_dice=False,
             safe_mode=False,
         )
-        current_player = "x"
-        prev_player = None
 
         is_heartbeat = episode % heartbeat == 0
 
@@ -52,21 +46,15 @@ def train_q_learning_agent(
             pa.start_turn(game_engine)
             dice_value = pa.get_dice_value(game_engine)
 
-            if prev_player == current_player:
-                raise ValueError("Player did not change after turn")
-
-            prev_player = current_player
-            current_player = pa.get_current_player(game_engine)
-
             # agent always as player 1
-            if pa.get_current_player(game_engine) == 1:
+            if pa.get_current_player(game_engine) == 0:
                 pre_move_state = q_agent.convert_state(
                     pa.get_board_state(game_engine), dice_value
                 )
                 pre_move_scores = pa.get_score(game_engine)
                 # Q-Learning Agent makes a move
                 action = q_agent.select_move(game_engine)
-                pa.do_move(game_engine, *action)
+                pa.do_move(game_engine, action)
                 post_move_state = q_agent.convert_state(
                     pa.get_board_state(game_engine), 0
                 )
@@ -85,16 +73,16 @@ def train_q_learning_agent(
             else:
                 # Random Agent makes a move
                 action = random_agent.select_move(game_engine)
-                pa.do_move(game_engine, *action)
+                pa.do_move(game_engine, action)
 
             pa.end_turn(game_engine)
 
         # Check game outcome
         if pa.get_game_over(game_engine):
             winner = pa.get_winner(game_engine)
-            if winner == 1:
+            if winner == 0:
                 wins += 1
-            elif winner == 2:
+            elif winner == 1:
                 losses += 1
             else:
                 draws += 1
@@ -115,22 +103,16 @@ def train_q_learning_agent(
             print("\nMotivation Stats:")
             print(f"Wins: {wins}, Losses: {losses}, Draws: {draws}")
             print(
-                "We just won!" if pa.get_winner(game_engine) == 1 else "We just lost!"
+                "We just won!" if pa.get_winner(game_engine) == 0 else "We just lost!"
             )
-            print(f"Board: {game_engine.game_board.board}")
             print(
-                f"Scores: Player 1: {game_engine.game_board.calculate_score()[0]}, Player 2: {game_engine.game_board.calculate_score()[1]}"
+                f"Scores: Player 1: {pa.get_score(game_engine)[0]}, Player 2: {pa.get_score(game_engine)[1]}"
             )
-            pa.display_board(game_engine)
-
             print("\nLearning Stats:")
             print(f"learning rate: {q_agent.learning_rate}")
             print(f"exploration rate: {q_agent.exploration_rate}")
 
-            if os.path.getsize(save_path) > file_size_limit:
-                print(f"Q-Table size exceeds {file_size_limit}, saving to {save_path}")
-                # exit early
-                break
+            pa.display_board(game_engine)
 
     print(
         f"Total time taken: {time.time() - perf_timer_total_run} for {episodes} episodes"
@@ -147,16 +129,29 @@ def save_q_table(q_table, save_path):
         pickle.dump(q_table, file)
 
 
-# python training/simple_q_learning_training_vs_random.py
-
+# # python training/simple_q_learning_training_vs_random_v2.py
 # if __name__ == "__main__":
-#     train_q_learning_agent(
+#     from line_profiler import LineProfiler
+
+#     lp = LineProfiler()
+#     lp_wrapper = lp(
+#         train_q_learning_agent
+#     )  # Pass the function itself, not its return value
+#     lp_wrapper(
 #         QLearningAgent,
 #         rm.calculate_for_score,
-#         episodes=20 * 1000 * 1000,
-#         save_path="./models/q_learning_model_by_score.pkl",
-#         resume_model_from_path="./models/q_learning_model_by_score.pkl",
-#     )
+#         episodes=100000,
+#         save_path="./models/q_learning_model_by_score_v2.pkl",
+#         # resume_model_from_path="./models/q_learning_model_by_score.pkl",
+#     )  # Now call the wrapper with the arguments
+#     lp.print_stats()
+train_q_learning_agent(
+    QLearningAgent,
+    rm.calculate_for_score,
+    episodes=20 * 1000 * 1000,
+    save_path="./models/q_learning_model_by_score.pkl",
+    # resume_model_from_path="./models/q_learning_model_by_score.pkl",
+)
 # if __name__ == "__main__":
 #     train_q_learning_agent(
 #         QLearningAgentSpaceOptimized,
@@ -165,12 +160,3 @@ def save_q_table(q_table, save_path):
 #         save_path="./models/q_learning_model_by_score_space_optmized.pkl",
 #         resume_model_from_path="./models/q_learning_model_by_score_space_optmized.pkl",
 #     )
-if __name__ == "__main__":
-    train_q_learning_agent(
-        QLearningAgentSpaceOptimized,
-        rm.calculate_for_score,
-        # episodes=10,
-        episodes=50 * 1000 * 1000,
-        save_path="./models/q_learning_model_by_score_game_simplified.pkl",
-        resume_model_from_path="./models/q_learning_model_by_score_game_simplified.pkl",
-    )
