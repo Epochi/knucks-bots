@@ -16,7 +16,7 @@ class AbstractAgent(ABC):
 
     def __init__(self, q_table_path=None):
         """in case we want to add some common attributes to all agents in the future."""
-        self.nickname = 'The Mysterion'
+        self.nickname = "The Mysterion"
         self.q_table = {}
         if q_table_path:
             self.load_q_table(q_table_path)
@@ -45,7 +45,13 @@ class AbstractAgent(ABC):
         """
         Converts the current board state and dice value into a string for Q-Table.
         """
-        return "".join(np.array(board_state).flatten().astype(str)) + str(dice_value)
+        # flatten two arrays and concatinate into string
+        state = (
+            "".join(str(col) for row in board_state[0] for col in row)
+            # + "".join(str(col) for row in board_state[1] for col in row)
+            + str(dice_value)
+        )
+        return state
 
     def load_q_table(self, path):
         """Load the Q-Table from a file."""

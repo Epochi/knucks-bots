@@ -9,8 +9,16 @@ from game.game_board_v2 import GameBoard
 class GameEngine:
     """Class for running the game and interface for interacting with the game board."""
 
-    def __init__(self, enable_print=False):
-        self.game_board = GameBoard()
+    def __init__(
+        self,
+        enable_print=False,
+        max_dice_value=None,
+        should_remove_opponents_dice=None,
+        safe_mode=None,
+    ):
+        self.game_board = GameBoard(
+            max_dice_value, should_remove_opponents_dice, safe_mode
+        )
         # randomly select the first player
         self.current_player = random.randint(0, 1)
         self.game_over = False
@@ -61,11 +69,11 @@ class GameEngine:
         :param col: The column where the dice should be placed.
         :return: True if the move was successfully made, otherwise False.
         """
-        if self.game_over:
-            raise ValueError("The game is already over.")
+        # if self.game_over:
+        #     raise ValueError("The game is already over.")
 
-        if self.dice_value is None:
-            raise ValueError("A dice has not been rolled for the current turn.")
+        # if self.dice_value is None:
+        #     raise ValueError("A dice has not been rolled for the current turn.")
 
         try:
             self.game_board.place_dice(self.current_player, col, self.dice_value)

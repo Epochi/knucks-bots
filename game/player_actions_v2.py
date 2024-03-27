@@ -11,14 +11,21 @@ For simplicity, we let game engine manage current player instead of exposing it 
 from game.game_engine_v2 import GameEngine
 
 
-def start_game(enable_print=False):
+def start_game(
+    enable_print=None,
+    max_dice_value=None,
+    should_remove_opponents_dice=None,
+    safe_mode=None,
+):
     """
     Starts a new game
 
     :param enable_print: enable print
     :return: game engine
     """
-    return GameEngine(enable_print)
+    return GameEngine(
+        enable_print, max_dice_value, should_remove_opponents_dice, safe_mode
+    )
 
 
 def start_turn(engine: GameEngine):
@@ -58,9 +65,8 @@ def get_board_state(engine: GameEngine):
     :return: player board state
     """
     if engine.current_player == 1:
-        return engine.game_board.board[1], engine.game_board.board[0]
-    return engine.game_board.board[0], engine.game_board.board[1]
-        
+        return engine.game_board.player_2_board, engine.game_board.player_1_board
+    return engine.game_board.player_1_board, engine.game_board.player_2_board
 
 
 def get_dice_value(engine: GameEngine):
@@ -81,12 +87,9 @@ def get_score(engine: GameEngine):
     :return: player score, opponent score
     """
     if engine.current_player == 0:
-        player_score = engine.game_board.player_1_score
-        opponent_score = engine.game_board.player_2_score
+        return engine.game_board.player_1_score, engine.game_board.player_2_score
     else:
-        player_score = engine.game_board.player_2_score
-        opponent_score = engine.game_board.player_1_score
-    return player_score, opponent_score
+        return engine.game_board.player_2_score, engine.game_board.player_1_score
 
 
 def get_available_moves(engine: GameEngine):
@@ -96,7 +99,7 @@ def get_available_moves(engine: GameEngine):
     :param engine: game engine
     :return: available moves
     """
-    return engine.game_board.get_available_moves()[engine.current_player]
+    return engine.game_board.get_available_moves(engine.current_player)
 
 
 def did_i_win(engine: GameEngine):
@@ -112,6 +115,7 @@ def did_i_win(engine: GameEngine):
         if engine.winner == -1:
             return 0
         return -1
+
 
 def get_winner(engine: GameEngine):
     """

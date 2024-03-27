@@ -65,9 +65,10 @@ class TestGameEngine(unittest.TestCase):
         self.assertFalse(self.game_engine.game_over, "Game should not be over.")
 
     @patch("game.game_board_v2.GameBoard.check_full", return_value=True)
-    @patch("game.game_board_v2.GameBoard.calculate_score", return_value=(10, 5))
-    def test_end_turn_with_game_over(self, mock_calculate_score, mock_check_full):
+    def test_end_turn_with_game_over(self, mock_calculate_score):
         """Test ending a turn with the game being over."""
+        self.game_engine.game_board.player_1_score = 10
+        self.game_engine.game_board.player_2_score = 5
         self.game_engine.end_turn()
         self.assertTrue(self.game_engine.game_over, "Game should be over.")
         self.assertEqual(self.game_engine.winner, 0, "Winner should be player 1.")
@@ -77,12 +78,6 @@ class TestGameEngine(unittest.TestCase):
         self.game_engine.game_over = True
         with self.assertRaises(ValueError):
             self.game_engine.start_turn()
-
-    def test_attempt_to_do_move_when_game_over(self):
-        """Test making a move when the game is already over."""
-        self.game_engine.game_over = True
-        with self.assertRaises(ValueError):
-            self.game_engine.do_move(0)
 
     def test_attempt_to_end_turn_when_game_over(self):
         """Test ending a turn when the game is already over."""

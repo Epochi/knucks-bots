@@ -28,12 +28,17 @@ def train_q_learning_agent(
     draws = 0
 
     heartbeat = min(10 / 100 * episodes, 10000)
+    perf_timer_total_run = time.time()
     perf_timer = None
-    file_size_limit = 10000000000  # around 10GB
     atexit.register(lambda: save_q_table(q_agent.q_table, save_path))
 
     for episode in range(episodes):
-        game_engine = pa.start_game()
+        game_engine = pa.start_game(
+            enable_print=False,
+            max_dice_value=6,
+            should_remove_opponents_dice=False,
+            safe_mode=False,
+        )
 
         is_heartbeat = episode % heartbeat == 0
 
@@ -103,13 +108,15 @@ def train_q_learning_agent(
             print(
                 f"Scores: Player 1: {pa.get_score(game_engine)[0]}, Player 2: {pa.get_score(game_engine)[1]}"
             )
+            print("\nLearning Stats:")
+            print(f"learning rate: {q_agent.learning_rate}")
+            print(f"exploration rate: {q_agent.exploration_rate}")
+
             pa.display_board(game_engine)
 
-            # if os.path.exists(save_path) & os.path.getsize(save_path) > file_size_limit:
-            #     print(f"Q-Table size exceeds {file_size_limit}, saving to {save_path}")
-            #     # exit early
-            #     break
-
+    print(
+        f"Total time taken: {time.time() - perf_timer_total_run} for {episodes} episodes"
+    )
     save_q_table(q_agent.q_table, save_path)
 
     print(f"Training completed. Wins: {wins}, Losses: {losses}, Draws: {draws}")
@@ -122,26 +129,29 @@ def save_q_table(q_table, save_path):
         pickle.dump(q_table, file)
 
 
-# python training/simple_q_learning_training_vs_random_v2.py
-if __name__ == "__main__":
-    from line_profiler import LineProfiler
-    lp = LineProfiler()
-    lp_wrapper = lp(train_q_learning_agent)  # Pass the function itself, not its return value
-    lp_wrapper(
-        QLearningAgent,
-        rm.calculate_for_score,
-        episodes=10000,
-        save_path="./models/q_learning_model_by_score.pkl",
-        # resume_model_from_path="./models/q_learning_model_by_score.pkl",
-    )  # Now call the wrapper with the arguments
-    lp.print_stats()
-    # train_q_learning_agent(
-    #     QLearningAgent,
-    #     rm.calculate_for_score,
-    #     episodes=20 * 1000 * 1000,
-    #     save_path="./models/q_learning_model_by_score.pkl",
-    #     # resume_model_from_path="./models/q_learning_model_by_score.pkl",
-    # )
+# # python training/simple_q_learning_training_vs_random_v2.py
+# if __name__ == "__main__":
+#     from line_profiler import LineProfiler
+
+#     lp = LineProfiler()
+#     lp_wrapper = lp(
+#         train_q_learning_agent
+#     )  # Pass the function itself, not its return value
+#     lp_wrapper(
+#         QLearningAgent,
+#         rm.calculate_for_score,
+#         episodes=100000,
+#         save_path="./models/q_learning_model_by_score_v2.pkl",
+#         # resume_model_from_path="./models/q_learning_model_by_score.pkl",
+#     )  # Now call the wrapper with the arguments
+#     lp.print_stats()
+train_q_learning_agent(
+    QLearningAgent,
+    rm.calculate_for_score,
+    episodes=20 * 1000 * 1000,
+    save_path="./models/q_learning_model_by_score.pkl",
+    # resume_model_from_path="./models/q_learning_model_by_score.pkl",
+)
 # if __name__ == "__main__":
 #     train_q_learning_agent(
 #         QLearningAgentSpaceOptimized,

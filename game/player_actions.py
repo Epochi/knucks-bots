@@ -11,14 +11,24 @@ For simplicity, we let game engine manage current player instead of exposing it 
 from game.game_engine import GameEngine
 
 
-def start_game(enable_print=False):
+def start_game(
+    enable_print=None,
+    max_dice_value=None,
+    should_remove_opponents_dice=None,
+    safe_mode=None,
+):
     """
     Starts a new game
 
     :param enable_print: enable print
+    :param max_dice_value: max dice value
+    :param should_remove_opponents_dice: should remove opponents dice
+    :param safe_mode: safe mode (can turn off for performance when training)
     :return: game engine
     """
-    return GameEngine(enable_print)
+    return GameEngine(
+        enable_print, max_dice_value, should_remove_opponents_dice, safe_mode
+    )
 
 
 def start_turn(engine: GameEngine):

@@ -120,10 +120,10 @@ class QLearningAgentSpaceOptimized(AbstractAgent):
         """
         # TODO: this is very slow, we can optimize this further, need to explore
         sort_player_1_board_state = _sort_grid_columns_v3(board_state[:3])
-        sort_player_2_board_state = _sort_grid_columns_v3(board_state[3:])
+        # sort_player_2_board_state = _sort_grid_columns_v3(board_state[3:])
 
         # Concatenate the string representations
-        str_representation = sort_player_1_board_state + sort_player_2_board_state
+        str_representation = sort_player_1_board_state  # + sort_player_2_board_state
 
         # Append the dice value
         state = str_representation + str(dice_value)

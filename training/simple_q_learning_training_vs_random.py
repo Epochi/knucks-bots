@@ -31,12 +31,18 @@ def train_q_learning_agent(
     current_player = 0
 
     heartbeat = min(10 / 100 * episodes, 10000)
+    perf_timer_total_run = time.time()
     perf_timer = None
     file_size_limit = 10000000000  # around 10GB
     atexit.register(lambda: save_q_table(q_agent.q_table, save_path))
 
     for episode in range(episodes):
-        game_engine = pa.start_game()
+        game_engine = pa.start_game(
+            enable_print=False,
+            max_dice_value=3,
+            should_remove_opponents_dice=False,
+            safe_mode=False,
+        )
         current_player = "x"
         prev_player = None
 
@@ -126,6 +132,9 @@ def train_q_learning_agent(
                 # exit early
                 break
 
+    print(
+        f"Total time taken: {time.time() - perf_timer_total_run} for {episodes} episodes"
+    )
     save_q_table(q_agent.q_table, save_path)
 
     print(f"Training completed. Wins: {wins}, Losses: {losses}, Draws: {draws}")
@@ -148,11 +157,20 @@ def save_q_table(q_table, save_path):
 #         save_path="./models/q_learning_model_by_score.pkl",
 #         resume_model_from_path="./models/q_learning_model_by_score.pkl",
 #     )
+# if __name__ == "__main__":
+#     train_q_learning_agent(
+#         QLearningAgentSpaceOptimized,
+#         rm.calculate_for_score,
+#         episodes=20 * 1000 * 1000,
+#         save_path="./models/q_learning_model_by_score_space_optmized.pkl",
+#         resume_model_from_path="./models/q_learning_model_by_score_space_optmized.pkl",
+#     )
 if __name__ == "__main__":
     train_q_learning_agent(
         QLearningAgentSpaceOptimized,
         rm.calculate_for_score,
-        episodes=20 * 1000 * 1000,
-        save_path="./models/q_learning_model_by_score_space_optmized.pkl",
-        resume_model_from_path="./models/q_learning_model_by_score_space_optmized.pkl",
+        # episodes=10,
+        episodes=50 * 1000 * 1000,
+        save_path="./models/q_learning_model_by_score_game_simplified.pkl",
+        resume_model_from_path="./models/q_learning_model_by_score_game_simplified.pkl",
     )

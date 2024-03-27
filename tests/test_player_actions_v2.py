@@ -29,7 +29,8 @@ class TestGameUtilityFunctions(unittest.TestCase):
     def test_get_score_player_1_perspective(self):
         """Test getting the score from player 1's perspective."""
         # Setup the mock to return specific scores
-        self.mock_engine.game_board.calculate_score.return_value = (10, 5)
+        self.mock_engine.game_board.player_1_score = 10
+        self.mock_engine.game_board.player_2_score = 5
         self.mock_engine.current_player = 0
 
         # Call the function under test
@@ -42,7 +43,8 @@ class TestGameUtilityFunctions(unittest.TestCase):
     def test_get_score_player_2_perspective(self):
         """Test getting the score from player 2's perspective."""
         # Setup the mock to return specific scores
-        self.mock_engine.game_board.calculate_score.return_value = (10, 5)
+        self.mock_engine.game_board.player_1_score = 10
+        self.mock_engine.game_board.player_2_score = 5
         self.mock_engine.current_player = 1
 
         # Call the function under test
