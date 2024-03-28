@@ -77,7 +77,7 @@ def train_agents(
             print("\nPerformance stats:")
             if perf_timer:
                 print(
-                    f"Time taken for {heartbeat} episodes: {time.time() - perf_timer}"
+                    f"Time taken for {heartbeat:,} episodes: {time.time() - perf_timer}"
                 )
             # objgraph.show_most_common_types()
             perf_timer = time.time()
