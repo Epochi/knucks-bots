@@ -14,14 +14,9 @@ class AbstractAgent(ABC):
     based on the current game board state and the value of the rolled dice.
     """
 
-    def __init__(self, q_table_path=None):
+    def __init__(self):
         """in case we want to add some common attributes to all agents in the future."""
         self.nickname = "The Mysterion"
-        self.q_table = {}
-        if q_table_path:
-            self.load_q_table(q_table_path)
-            print("Q-Table loaded successfully.")
-            print(f"Q-Table size: {len(self.q_table)}")
 
     @abstractmethod
     def select_move(self, game_engine):
@@ -53,8 +48,8 @@ class AbstractAgent(ABC):
         )
         return state
 
-    def load_q_table(self, path):
-        """Load the Q-Table from a file."""
+    def load_model(self, path):
+        """Load the Model from a file."""
         # Check if file exists
         if not os.path.exists(path):
             print(
@@ -63,4 +58,9 @@ class AbstractAgent(ABC):
             return
 
         with open(path, "rb") as file:
-            self.q_table = pickle.load(file)
+            self.model = pickle.load(file)
+
+    def save_model(self, path):
+        """Save the Model to a file."""
+        with open(path, "wb") as file:
+            pickle.dump(self.model, file)

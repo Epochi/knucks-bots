@@ -1,10 +1,14 @@
 """Run a game of Knucklebones between two players"""
 
 import game.player_actions_v2 as pa
+from utils.play_game import PlayingAgent, GameRules, player_move
 
 
 def play_game(
-    player1, player2, verbose=False, player1_reward_func=None, player2_reward_func=None
+    player_1: PlayingAgent,
+    player_2: PlayingAgent,
+    game_rules: GameRules,
+    verbose: bool = False,
 ):
     """
     Play a game between two players.
@@ -14,60 +18,28 @@ def play_game(
     :param verbose: Whether to print game state at each turn.
     :return: The winner of the game.
     """
-    engine = pa.start_game(verbose)
+    game_engine = pa.start_game(
+        enable_print=False,
+        max_dice_value=game_rules.max_dice_value,
+        should_remove_opponents_dice=game_rules.should_remove_opponents_dice,
+        safe_mode=False,
+    )
 
-    player1_with_reward = {"player": player1, "reward_func": player1_reward_func}
-    player2_with_reward = {"player": player2, "reward_func": player2_reward_func}
+    while not pa.get_game_over(game_engine):
+        current_player = (
+            player_1 if pa.get_current_player(game_engine) == 0 else player_2
+        )
 
-    while not pa.get_game_over(engine):
+        player_move(game_engine, current_player, game_rules)
+
+    if pa.get_game_over(game_engine) is True:
         if verbose:
-            engine.game_board.display()
-
-        pa.start_turn(engine)
-
-        if engine.current_player == 0:
-            current_player = player1_with_reward
-        else:
-            current_player = player2_with_reward
-
-        if current_player["reward_func"] is not None:
-            prev_state = current_player["player"].convert_state(
-                pa.get_board_state(engine), pa.get_dice_value(engine)
-            )
-            prev_scores = pa.get_score(engine)
-
-        action = current_player["player"].select_move(engine)
-
-        if verbose:
-            print(f"Player {engine.current_player} selected move: {action}).")
-
-        try:
-            pa.do_move(engine, action)
-
-            if current_player["reward_func"] is not None:
-                next_state = current_player["player"].convert_state(
-                    pa.get_board_state(engine), 0
-                )
-                next_scores = pa.get_score(engine)
-                reward = current_player["reward_func"](
-                    engine, prev_state, prev_scores, action, next_state, next_scores
-                )
-                current_player["player"].learn(prev_state, action, reward, next_state)
-
-        except ValueError as e:
-            print(e)
-            break
-
-        pa.end_turn(engine)
-
-    if pa.get_game_over(engine) is True:
-        if verbose:
-            engine.game_board.display()
-            if engine.winner == 0:
+            game_engine.game_board.display()
+            if game_engine.winner == 0:
                 print("Player 1 - {player1_with_reward.nickname} has won the game!")
-            elif engine.winner == 1:
+            elif game_engine.winner == 1:
                 print("Player 2 - {player2_with_reward.nickname} has won the game!")
             else:
                 print(f"Draw! No one won the game.")
 
-    return engine.winner
+    return game_engine.winner

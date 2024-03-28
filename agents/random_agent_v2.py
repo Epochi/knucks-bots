@@ -10,8 +10,8 @@ class RandomAgent(AbstractAgent):
     A simple agent that selects its move randomly from available moves.
     """
 
-    def __init__(self, q_table_path=None):
-        super().__init__(q_table_path)
+    def __init__(self):
+        super().__init__()
         self.nickname = "Wild Card"
 
     def select_move(self, game_engine):

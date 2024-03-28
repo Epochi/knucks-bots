@@ -16,14 +16,16 @@ class TestGameEngine(unittest.TestCase):
 
     def test_state_to_string(self):
         """Test if roll_dice method returns a value"""
-        board_state = np.array(
-            [[[1, 2, 3], [4, 5, 6], [0, 0, 0]], [[1, 2, 3], [4, 5, 6], [0, 0, 0]]]
-        )
+        board_state = [
+            [[1, 2, 3], [4, 5, 6], [0, 0, 0]],
+            [[1, 2, 3], [4, 5, 6], [0, 0, 0]],
+        ]
         dice_value = 4
         state = self.q_agent.convert_state(board_state, dice_value)
-        self.assertEqual(state, "1234560001234560004")
+        # self.assertEqual(state, "1234560001234560004")
+        self.assertEqual(state, "1234560004")
 
-    def test_update_q_table(self):
+    def test_learn(self):
         """Test if the Q-table is updated correctly"""
         q_agent = QLearningAgent(
             learning_rate=1,
@@ -38,10 +40,10 @@ class TestGameEngine(unittest.TestCase):
         reward = 1
         new_state = "1240000000000000010"
 
-        q_agent.update_q_table(prev_state, action, reward, new_state)
+        q_agent.learn(prev_state, action, reward, new_state)
         self.assertEqual(q_agent.q_table[prev_state][action], reward)
 
-    @patch("agents.simple_q_learning.pa")
+    @patch("agents.simple_q_learning_v2.pa")
     def test_select_move_random(self, mock_pa):
         """Test if the agent selects a move correctly"""
         q_agent = QLearningAgent(
@@ -52,20 +54,18 @@ class TestGameEngine(unittest.TestCase):
             min_exploration_rate=0,
         )
 
-        board_state = np.array(
+        board_state = [
             [
-                [
-                    [1, 2, 0],
-                    [0, 0, 0],
-                    [0, 0, 0],
-                ],
-                [
-                    [0, 0, 0],
-                    [0, 0, 0],
-                    [0, 0, 1],
-                ],
-            ]
-        )
+                [1, 2, 0],
+                [0, 0, 0],
+                [0, 0, 0],
+            ],
+            [
+                [0, 0, 0],
+                [0, 0, 0],
+                [0, 0, 1],
+            ],
+        ]
 
         game_engine = MagicMock()
         mock_pa.get_board_state.return_value = board_state
@@ -77,7 +77,7 @@ class TestGameEngine(unittest.TestCase):
         action = q_agent.select_move(game_engine)
         self.assertIn(action, [1, 2, 3])
 
-    @patch("agents.simple_q_learning.pa")
+    @patch("agents.simple_q_learning_v2.pa")
     def test_select_move_max_q(self, mock_pa):
         """Test if the agent selects a move correctly"""
         q_agent = QLearningAgent(

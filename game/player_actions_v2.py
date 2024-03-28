@@ -56,7 +56,7 @@ def end_turn(engine: GameEngine):
     engine.end_turn()
 
 
-def get_board_state(engine: GameEngine):
+def get_board_state(engine: GameEngine, should_return_both=True):
     """
     Get picture of the current board
     (if player 2, flip the board perspective)
@@ -65,8 +65,13 @@ def get_board_state(engine: GameEngine):
     :return: player board state
     """
     if engine.current_player == 1:
-        return engine.game_board.player_2_board, engine.game_board.player_1_board
-    return engine.game_board.player_1_board, engine.game_board.player_2_board
+        board_state = engine.game_board.player_2_board, engine.game_board.player_1_board
+    else:
+        board_state = engine.game_board.player_1_board, engine.game_board.player_2_board
+
+    if should_return_both:
+        return board_state
+    return [board_state[0]]
 
 
 def get_dice_value(engine: GameEngine):
