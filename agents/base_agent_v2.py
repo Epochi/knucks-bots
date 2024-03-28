@@ -36,7 +36,7 @@ class AbstractAgent(ABC):
         :return: row, col move to make
         """
 
-    def update_q_table(self, prev_state, action, reward, new_state):
+    def learn(self, prev_state, action, reward, new_state):
         """
         Update the Q-Table based on the previous state, action, reward, and new state.
         """
@@ -48,7 +48,7 @@ class AbstractAgent(ABC):
         # flatten two arrays and concatinate into string
         state = (
             "".join(str(col) for row in board_state[0] for col in row)
-            # + "".join(str(col) for row in board_state[1] for col in row)
+            + "".join(str(col) for row in board_state[1] for col in row)
             + str(dice_value)
         )
         return state

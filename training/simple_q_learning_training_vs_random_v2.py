@@ -1,16 +1,29 @@
 """Train a Q-Learning agent against a random agent"""
 
+import signal
 import os
 import pickle
 import time
 import atexit
 import objgraph
 import game.player_actions_v2 as pa
-import training.reward_models as rm
+import training.reward_models_v2 as rm
 from agents.simple_q_learning_v2 import QLearningAgent
 from agents.simple_q_learning_state_optimized import QLearningAgentSpaceOptimized
 
 from agents.random_agent_v2 import RandomAgent
+
+interrupted = False
+
+
+# Signal handler function
+def signal_handler(signum, frame):
+    global interrupted
+    interrupted = True
+    print("CTRL+C detected. Finishing the current episode...")
+
+
+signal.signal(signal.SIGINT, signal_handler)
 
 
 def train_q_learning_agent(
@@ -30,7 +43,7 @@ def train_q_learning_agent(
     heartbeat = min(10 / 100 * episodes, 10000)
     perf_timer_total_run = time.time()
     perf_timer = None
-    atexit.register(lambda: save_q_table(q_agent.q_table, save_path))
+    global interrupted
 
     for episode in range(episodes):
         game_engine = pa.start_game(
@@ -55,9 +68,10 @@ def train_q_learning_agent(
                 # Q-Learning Agent makes a move
                 action = q_agent.select_move(game_engine)
                 pa.do_move(game_engine, action)
-                post_move_state = q_agent.convert_state(
-                    pa.get_board_state(game_engine), 0
-                )
+                post_move_board_state = pa.get_board_state(game_engine)
+                post_move_states = [
+                    q_agent.convert_state(post_move_board_state, i) for i in range(1, 7)
+                ]
                 post_move_score = pa.get_score(game_engine)
 
                 reward = reward_func(
@@ -65,11 +79,11 @@ def train_q_learning_agent(
                     pre_move_state,
                     pre_move_scores,
                     action,
-                    post_move_state,
+                    post_move_states,
                     post_move_score,
                 )
 
-                q_agent.update_q_table(pre_move_state, action, reward, post_move_state)
+                q_agent.learn(pre_move_state, action, reward, post_move_states)
             else:
                 # Random Agent makes a move
                 action = random_agent.select_move(game_engine)
@@ -106,13 +120,17 @@ def train_q_learning_agent(
                 "We just won!" if pa.get_winner(game_engine) == 0 else "We just lost!"
             )
             print(
-                f"Scores: Player 1: {pa.get_score(game_engine)[0]}, Player 2: {pa.get_score(game_engine)[1]}"
+                f"Scores: {q_agent.nickname}: {pa.get_score(game_engine)[0]},  {random_agent.nickname}: {pa.get_score(game_engine)[1]}"
             )
             print("\nLearning Stats:")
             print(f"learning rate: {q_agent.learning_rate}")
             print(f"exploration rate: {q_agent.exploration_rate}")
 
             pa.display_board(game_engine)
+
+        if interrupted:
+            print("Stop requested. Exiting training.")
+            break
 
     print(
         f"Total time taken: {time.time() - perf_timer_total_run} for {episodes} episodes"
@@ -147,10 +165,10 @@ def save_q_table(q_table, save_path):
 #     lp.print_stats()
 train_q_learning_agent(
     QLearningAgent,
-    rm.calculate_for_score,
-    episodes=20 * 1000 * 1000,
+    rm.calculate_for_own_score_only,
+    episodes=100 * 1000 * 1000,
     save_path="./models/q_learning_model_by_score.pkl",
-    # resume_model_from_path="./models/q_learning_model_by_score.pkl",
+    resume_model_from_path="./models/q_learning_model_by_score_v2.pkl",
 )
 # if __name__ == "__main__":
 #     train_q_learning_agent(

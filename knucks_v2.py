@@ -39,9 +39,7 @@ def play_game(
         action = current_player["player"].select_move(engine)
 
         if verbose:
-            print(
-                f"Player {engine.current_player} selected move: {action})."
-            )
+            print(f"Player {engine.current_player} selected move: {action}).")
 
         try:
             pa.do_move(engine, action)
@@ -54,9 +52,7 @@ def play_game(
                 reward = current_player["reward_func"](
                     engine, prev_state, prev_scores, action, next_state, next_scores
                 )
-                current_player["player"].update_q_table(
-                    prev_state, action, reward, next_state
-                )
+                current_player["player"].learn(prev_state, action, reward, next_state)
 
         except ValueError as e:
             print(e)
