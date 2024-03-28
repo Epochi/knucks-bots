@@ -12,7 +12,6 @@ import game.player_actions_v2 as pa
 class DQN(nn.Module):
     def __init__(self, state_size, action_size):
         super(DQN, self).__init__()
-        # Define the architecture of the network
         self.fc1 = nn.Linear(state_size, 64)
         self.relu = nn.ReLU()
         self.fc2 = nn.Linear(64, action_size)
@@ -63,7 +62,6 @@ class DeepQLearningAgent(AbstractAgent):
         available_moves = pa.get_available_moves(game_engine)
         state = pa.get_board_state(game_engine)
         if random.uniform(0, 1) < self.exploration_rate:
-            # Exploration: Randomly select from available moves
             action = random.choice(available_moves)
         else:
             # Exploitation: Select the action with the highest predicted Q-value from the available moves

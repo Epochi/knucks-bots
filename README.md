@@ -5,7 +5,7 @@ In this project different agents play board game knucklebones.
 The agents tested here are:
 1. Random
 2. Q-Learning
-3. Deep Q-Learning (Not implemented)
+3. Deep Q-Learning
 4. Human (Not implemented)
 
 # Game Overview
@@ -32,12 +32,12 @@ Knucklebones is a two player dice game from the videya game Cult of the Lamb.
 # Project Structure
 
 * /game - files for controlling the game
-* /agents - have RL agents that are able to play the game
-* /training - have scripts that play the game using the agents to train model. The training scripts can use different modifiers that the agents accept
+* /agents - reinforment learning agents that are able to play the game
+* /training - scripts for training the agents versus eachother and saving models
 * /models - models of the trained agents
 * /notebooks - jupyter notebooks comparing different model win rates
 * /tests - unit tests
-* /play - files for manual play against one of the models
+* /utils - shared utilty functions for the above
 
 # Running the project
 
