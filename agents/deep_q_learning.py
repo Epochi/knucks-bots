@@ -27,6 +27,7 @@ class DeepQLearningAgent(AbstractAgent):
         state_size,
         action_size=3,
         nickname="The Brain",
+        should_save_model=True,
         learning_rate=0.001,
         discount_factor=0.95,
         exploration_rate=1.0,
@@ -36,7 +37,7 @@ class DeepQLearningAgent(AbstractAgent):
         batch_size=64,
         target_update=10,
     ):
-        super().__init__(nickname)
+        super().__init__(nickname, should_save_model)
         self.state_size = state_size
         self.action_size = action_size
         self.memory = deque(maxlen=memory_size)

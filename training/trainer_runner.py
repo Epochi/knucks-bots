@@ -58,6 +58,21 @@ def deep_q_vs_random():
     )
 
 
+# python -c 'from training import trainer_runner; trainer_runner.deep_q_full_game_vs_random()'
+def deep_q_full_game_vs_random():
+    player_1 = PlayingAgent(
+        DeepQLearningAgent(
+            state_size=63 + 63 + 6,
+            nickname="AlphaMinusOne",
+        ),
+        rm.calculate_for_multiples_and_removals_score,
+        "deep_q_full_game_vs_random",
+    )
+    player_2 = PlayingAgent(RandomAgent(), None)
+    game_rules = GameRules(should_remove_opponents_dice=True)
+    agent_trainer.train_agents(player_1, player_2, game_rules, episodes=5 * 1000 * 1000)
+
+
 # python -c 'from training import trainer_runner; trainer_runner.simple_high_explore_vs_random_no_removal()'
 def simple_high_explore_vs_random_no_removal():
     player_1 = PlayingAgent(

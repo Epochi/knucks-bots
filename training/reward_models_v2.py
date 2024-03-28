@@ -58,6 +58,7 @@ def calculate_for_multiples_and_removals_score(
     if player_score_diff > dice_placed:
         reward += player_score_diff
 
+    # reward for any removal?
     if abs(opponent_score_diff) > dice_placed:
         reward += abs(opponent_score_diff)
 

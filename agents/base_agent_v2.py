@@ -14,8 +14,9 @@ class AbstractAgent(ABC):
     based on the current game board state and the value of the rolled dice.
     """
 
-    def __init__(self, nickname="The Mysterion"):
+    def __init__(self, nickname="The Mysterion", should_save_model=True):
         """in case we want to add some common attributes to all agents in the future."""
+        self.should_save_model = should_save_model
         self.nickname = nickname
         self.model = {}
 
@@ -63,5 +64,6 @@ class AbstractAgent(ABC):
 
     def save_model(self, path):
         """Save the Model to a file."""
-        with open(path, "wb") as file:
-            pickle.dump(self.model, file)
+        if self.should_save_model:
+            with open(path, "wb") as file:
+                pickle.dump(self.model, file)
