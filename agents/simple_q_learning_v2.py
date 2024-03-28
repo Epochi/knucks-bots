@@ -12,13 +12,14 @@ class QLearningAgent(AbstractAgent):
 
     def __init__(
         self,
+        nickname="Cell, the Brain Cell",
         learning_rate=0.1,
         discount_factor=0.95,
         exploration_rate=1.0,
         exploration_decay=0.99,
         min_exploration_rate=0.01,
     ):
-        super().__init__(nickname="Cell, the Brain Cell")
+        super().__init__(nickname)
         self.learning_rate = learning_rate
         self.discount_factor = discount_factor
         self.exploration_rate = exploration_rate

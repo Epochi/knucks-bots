@@ -48,7 +48,7 @@ def deep_q_vs_random():
             state_size=63 + 6,
             nickname="The Brain that thinks that it plays with itself",
         ),
-        rm.calculate_for_own_score_only,
+        rm.one_side_for_multiply_and_win_only,
         "deep_q_by_score_vs_random_game_no_removal",
     )
     player_2 = PlayingAgent(RandomAgent(), None)

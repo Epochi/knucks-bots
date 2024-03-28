@@ -92,7 +92,7 @@ def train_q_learning_agent(
             if (
                 hasattr(player_2.agent, "model")
                 and isinstance(player_2.agent.model, dict)
-                and len(player_1.agent.model) > 0
+                and len(player_2.agent.model) > 0
             ):
                 print(
                     f"keys in {player_2.agent.nickname} model: {len(player_2.agent.model)}"
