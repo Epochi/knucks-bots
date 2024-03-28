@@ -67,7 +67,7 @@ def train_q_learning_agent(
 
         # sanity check, print game every 10% of the episodes, but not more rarely than 1000
         if is_heartbeat:
-            print(f"Episode {episode}/{episodes}")
+            print(f"Episode {episode:,}/{episodes:,}")
 
             print("\nPerformance stats:")
             if perf_timer:
@@ -76,11 +76,25 @@ def train_q_learning_agent(
                 )
             # objgraph.show_most_common_types()
             perf_timer = time.time()
-            if hasattr(player_1.agent, "model"):
-                print(f"keys in  model: {len(player_1.agent.model)}")
+            if (
+                hasattr(player_1.agent, "model")
+                and isinstance(player_1.agent.model, dict)
+                and len(player_1.agent.model) > 0
+            ):
+                print(
+                    f"keys in {player_1.agent.nickname} model: {len(player_1.agent.model)}"
+                )
+            if (
+                hasattr(player_2.agent, "model")
+                and isinstance(player_2.agent.model, dict)
+                and len(player_1.agent.model) > 0
+            ):
+                print(
+                    f"keys in {player_2.agent.nickname} model: {len(player_2.agent.model)}"
+                )
 
             print("\nMotivation Stats:")
-            print(f"Wins: {wins}, Losses: {losses}, Draws: {draws}")
+            print(f"Wins: {wins:,}, Losses: {losses:,}, Draws: {draws:,}")
             print(
                 "We just won!" if pa.get_winner(game_engine) == 0 else "We just lost!"
             )
@@ -104,7 +118,7 @@ def train_q_learning_agent(
             break
 
     print(
-        f"Total time taken: {time.time() - perf_timer_total_run} for {episodes} episodes"
+        f"Total time taken: {time.time() - perf_timer_total_run} for {episodes:,} episodes"
     )
     if player_1.model_name is not None:
         player_1.agent.save_model(f"./models/{player_1.model_name}.pkl")

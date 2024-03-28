@@ -53,14 +53,20 @@ def player_move(game_engine: GameEngine, agent: PlayingAgent, game_rules=GameRul
         post_move_score = pa.get_score(game_engine)
 
         reward = agent.reward_func(
-            game_engine,
-            pre_move_state,
-            pre_move_scores,
-            action,
-            post_move_states,
-            post_move_score,
+            game_engine=game_engine,
+            prev_state=pre_move_state,
+            prev_scores=pre_move_scores,
+            action=action,
+            new_state=post_move_states,
+            new_scores=post_move_score,
+            dice_placed=dice_value,
         )
 
-        agent.agent.learn(pre_move_state, action, reward, post_move_states)
+        agent.agent.learn(
+            prev_state=pre_move_state,
+            action=action,
+            reward=reward,
+            new_states=post_move_states,
+        )
 
     pa.end_turn(game_engine)
