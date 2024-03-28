@@ -24,12 +24,14 @@ def train_q_learning_agent(
     player_2: PlayingAgent,
     game_rules: GameRules,
     episodes=1000,
+    write_result_history=False,
 ):
     """train Q-Learning agent against a random agent"""
     wins = 0
     losses = 0
     draws = 0
-    result_history = []
+    if write_result_history:
+        result_history = []
 
     heartbeat = min(10 / 100 * episodes, 10000)
     perf_timer_total_run = time.time()
@@ -57,13 +59,16 @@ def train_q_learning_agent(
             winner = pa.get_winner(game_engine)
             if winner == 0:
                 wins += 1
-                result_history.append(1)
+                if write_result_history:
+                    result_history.append(1)
             elif winner == 1:
                 losses += 1
-                result_history.append(-1)
+                if write_result_history:
+                    result_history.append(-1)
             else:
                 draws += 1
-                result_history.append(0)
+                if write_result_history:
+                    result_history.append(0)
 
         # sanity check, print game every 10% of the episodes, but not more rarely than 1000
         if is_heartbeat:
@@ -126,10 +131,11 @@ def train_q_learning_agent(
     if player_2.model_name is not None:
         player_2.agent.save_model(f"./models/{player_2.model_name}.pkl")
 
-    save_list(
-        result_history,
-        f"./models/{player_1.agent.nickname}_vs_{player_2.agent.nickname}_result_history_{time.time()}.pkl",
-    )
+    if write_result_history:
+        save_list(
+            result_history,
+            f"./models/{player_1.agent.nickname}_vs_{player_2.agent.nickname}_result_history_{time.time()}.pkl",
+        )
 
     print(f"Training completed. Wins: {wins}, Losses: {losses}, Draws: {draws}")
 
