@@ -98,7 +98,7 @@ def train_q_learning_agent(
                     f"keys in {player_2.agent.nickname} model: {len(player_2.agent.model)}"
                 )
 
-            print("\nMotivation Stats:")
+            print("\nMotivational Stats:")
             print(f"Wins: {wins:,}, Losses: {losses:,}, Draws: {draws:,}")
             print(
                 "We just won!" if pa.get_winner(game_engine) == 0 else "We just lost!"
