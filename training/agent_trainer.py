@@ -99,7 +99,9 @@ def train_q_learning_agent(
                 )
 
             print("\nMotivational Stats:")
-            print(f"Wins: {wins:,}, Losses: {losses:,}, Draws: {draws:,}")
+            print(
+                f"{player_1.agent.nickname} Wins: {wins:,}, {player_2.agent.nickname} Wins: {losses:,}, Draws: {draws:,}"
+            )
             print(
                 "We just won!" if pa.get_winner(game_engine) == 0 else "We just lost!"
             )
@@ -137,7 +139,9 @@ def train_q_learning_agent(
             f"./models/{player_1.agent.nickname}_vs_{player_2.agent.nickname}_result_history_{time.time()}.pkl",
         )
 
-    print(f"Training completed. Wins: {wins}, Losses: {losses}, Draws: {draws}")
+    print(
+        f"Training completed. {player_1.agent.nickname} Wins: {wins:,}, {player_2.agent.nickname} Wins: {losses:,}, Draws: {draws:,}"
+    )
 
 
 def save_list(list, save_path):
