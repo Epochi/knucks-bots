@@ -38,7 +38,7 @@ def calculate_reward_template(
     )
 
 
-def calculate_for_score(
+def calculate_for_multiples_and_removals_score(
     game_engine: GameEngine,
     prev_state: str,
     prev_scores: tuple,
@@ -55,17 +55,15 @@ def calculate_for_score(
     player_score_diff = new_scores[0] - prev_scores[0]
     opponent_score_diff = new_scores[1] - prev_scores[1]
 
-    # if player increased the score, reward very well
-    if player_score_diff > 0:
+    if player_score_diff > dice_placed:
         reward += player_score_diff
 
-    # if player decreased the score of the opponent, reward very well
-    if opponent_score_diff < 0:
+    if abs(opponent_score_diff) > dice_placed:
         reward += abs(opponent_score_diff)
 
     if pa.get_game_over(game_engine):
         if game_engine.winner == pa.did_i_win(game_engine):
-            reward += 1000
+            reward += 100
     return reward
 
 
