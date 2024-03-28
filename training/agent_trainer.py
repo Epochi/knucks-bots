@@ -19,7 +19,7 @@ def signal_handler(signum, frame):
 signal.signal(signal.SIGINT, signal_handler)
 
 
-def train_q_learning_agent(
+def train_agents(
     player_1: PlayingAgent,
     player_2: PlayingAgent,
     game_rules: GameRules,
@@ -119,6 +119,7 @@ def train_q_learning_agent(
                 print(f"exploration rate: {player_2.agent.exploration_rate}")
 
             pa.display_board(game_engine)
+            print("\n")
 
         if interrupted:
             print("Stop requested. Exiting training.")

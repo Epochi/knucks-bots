@@ -22,7 +22,7 @@ def train_simple_vs_random():
     )
     player_2 = PlayingAgent(RandomAgent(), None)
     game_rules = GameRules(max_dice_value=6, should_remove_opponents_dice=False)
-    agent_trainer.train_q_learning_agent(
+    agent_trainer.train_agents(
         player_1, player_2, game_rules, episodes=100 * 1000 * 1000
     )
 
@@ -30,13 +30,13 @@ def train_simple_vs_random():
 # python -c 'from training import trainer_runner; trainer_runner.train_simple_vs_random_multiply_only()'
 def train_simple_vs_random_multiply_only():
     player_1 = PlayingAgent(
-        QLearningAgent(nickame="Doesn't get out from the bed for less than 10k"),
+        QLearningAgent(nickname="Doesn't get out from the bed for less than 10k"),
         rm.one_side_for_multiply_and_win_only,
         "simple_q_by_score_vs_random_game_reward_for_multiply_only",
     )
     player_2 = PlayingAgent(RandomAgent(), None)
     game_rules = GameRules(max_dice_value=6, should_remove_opponents_dice=False)
-    agent_trainer.train_q_learning_agent(
+    agent_trainer.train_agents(
         player_1, player_2, game_rules, episodes=100 * 1000 * 1000
     )
 
@@ -53,7 +53,7 @@ def deep_q_vs_random():
     )
     player_2 = PlayingAgent(RandomAgent(), None)
     game_rules = GameRules(max_dice_value=6, should_remove_opponents_dice=False)
-    agent_trainer.train_q_learning_agent(
+    agent_trainer.train_agents(
         player_1, player_2, game_rules, episodes=100 * 1000 * 1000
     )
 
@@ -64,6 +64,6 @@ def random_vs_random():
     player_1 = PlayingAgent(RandomAgent(), None)
     player_2 = PlayingAgent(RandomAgent("Mad Contender"), None)
     game_rules = GameRules(max_dice_value=6, should_remove_opponents_dice=False)
-    agent_trainer.train_q_learning_agent(
+    agent_trainer.train_agents(
         player_1, player_2, game_rules, episodes=100 * 1000 * 1000
     )
