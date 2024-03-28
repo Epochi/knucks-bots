@@ -54,10 +54,7 @@ class QLearningAgent(AbstractAgent):
         """update the Q-table based on the reward received"""
         # Ensure the state entries exist in the Q-table
         if prev_state not in self.model:
-            self.model[prev_state] = {action: 0}
-
-        if action not in self.model[prev_state]:
-            self.model[prev_state][action] = 0
+            self.model[prev_state] = {1: 0, 2: 0, 3: 0}
 
         # update Q-Value for the taken action in the previous state
         current_q_value = self.model[prev_state][action]

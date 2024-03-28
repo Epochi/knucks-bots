@@ -58,6 +58,27 @@ def deep_q_vs_random():
     )
 
 
+# python -c 'from training import trainer_runner; trainer_runner.simple_high_explore_vs_random_no_removal()'
+def simple_high_explore_vs_random_no_removal():
+    player_1 = PlayingAgent(
+        QLearningAgent(
+            nickname="Dora the explorer",
+            learning_rate=0.3,
+            discount_factor=0.95,
+            exploration_rate=1.0,
+            exploration_decay=0.9999999999999,
+            min_exploration_rate=0.25,
+        ),
+        rm.calculate_for_own_score_only,
+        "simple_high_explore_vs_random_no_removal",
+    )
+    player_2 = PlayingAgent(RandomAgent(), None)
+    game_rules = GameRules(max_dice_value=6, should_remove_opponents_dice=False)
+    agent_trainer.train_agents(
+        player_1, player_2, game_rules, episodes=100 * 1000 * 1000
+    )
+
+
 # python -c 'from training import trainer_runner; trainer_runner.random_vs_random()'
 def random_vs_random():
     # this is a control group to see if the agents are learning anything

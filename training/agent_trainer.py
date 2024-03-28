@@ -126,7 +126,7 @@ def train_agents(
             break
 
     print(
-        f"Total time taken: {time.time() - perf_timer_total_run} for {episodes:,} episodes"
+        f"Total time taken: {time.time() - perf_timer_total_run} for {wins+draws+losses:,} episodes"
     )
     if player_1.model_name is not None:
         player_1.agent.save_model(f"./models/{player_1.model_name}.pkl")
