@@ -12,16 +12,13 @@ class QLearningAgent(AbstractAgent):
 
     def __init__(
         self,
-        q_table_path=None,
         learning_rate=0.2,
         discount_factor=0.95,
         exploration_rate=1.0,
         exploration_decay=0.99999999,
         min_exploration_rate=0.05,
     ):
-        super().__init__()
-        self.model = {}
-        self.nickname = "Cell, the Brain Cell"
+        super().__init__(nickname="Cell, the Brain Cell")
         self.learning_rate = learning_rate
         self.discount_factor = discount_factor
         self.exploration_rate = exploration_rate
@@ -106,5 +103,5 @@ class QLearningAgent(AbstractAgent):
 
         self.exploration_rate = max(
             self.min_exploration_rate,
-            self.exploration_rate * self.exploration_decay * total_size,
+            (self.exploration_rate * self.exploration_decay) ** total_size,
         )

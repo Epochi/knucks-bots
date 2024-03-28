@@ -14,9 +14,10 @@ class AbstractAgent(ABC):
     based on the current game board state and the value of the rolled dice.
     """
 
-    def __init__(self):
+    def __init__(self, nickname="The Mysterion"):
         """in case we want to add some common attributes to all agents in the future."""
-        self.nickname = "The Mysterion"
+        self.nickname = nickname
+        self.model = {}
 
     @abstractmethod
     def select_move(self, game_engine):

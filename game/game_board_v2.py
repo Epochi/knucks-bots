@@ -79,7 +79,6 @@ class GameBoard:
                 )
 
         board = self.player_1_board if player == 0 else self.player_2_board
-
         if board[col][0] == 0:
             board[col][0] = value
         elif board[col][1] == 0:

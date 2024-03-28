@@ -10,7 +10,7 @@ interrupted = False
 
 class PlayingAgent:
     def __init__(self, agent: AbstractAgent, reward_func=None, model_name: str = None):
-        self.agent = agent()
+        self.agent = agent
         if model_name is not None:
             self.agent.load_model(f"./models/{model_name}.pkl")
         self.reward_func = reward_func

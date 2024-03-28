@@ -44,11 +44,11 @@ Knucklebones is a two player dice game from the videya game Cult of the Lamb.
 Requires pyhon 3.11.
 I recommend using .venv and setting export PYTHONPATH="$PYTHONPATH:full-path-to-directory/knucks-bots" in activate file
 
-To train models there are blocks of code at the end of training files in /training folder that try different configurations
+To train models go to training/trainer_runner.py and run one of the models
 
 ## Available configurations
 
-player_actions.start_game accept few configurations for game rules. Turning off the rule to remove opponent dice makes the game significantly simpler and in turn makes it quicker to train a model.
+utils.play_game.GameRules exposes all available rule configurations. i.e. turning off the rule to remove opponent dice makes the game significantly simpler and in turn makes it quicker to train a model. Or using lower max value for dice can make for a smaller state, but it also makes the game more random, leaving choices less meaningful
 
 
 ## V1 and V2
