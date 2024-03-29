@@ -12,13 +12,28 @@ import game.player_actions_v2 as pa
 class DQN(nn.Module):
     def __init__(self, state_size, action_size):
         super(DQN, self).__init__()
-        self.fc1 = nn.Linear(state_size, 64)
-        self.relu = nn.ReLU()
-        self.fc2 = nn.Linear(64, action_size)
+        self.fc1 = nn.Linear(state_size, 128)  # First fully connected layer
+        self.relu1 = nn.ReLU()  # ReLU activation for non-linearity
+        self.dropout1 = nn.Dropout(p=0.2)  # Dropout for regularization
+
+        self.fc2 = nn.Linear(128, 128)  # Second fully connected layer
+        self.relu2 = nn.ReLU()  # ReLU activation for non-linearity
+        self.dropout2 = nn.Dropout(p=0.2)  # Additional dropout layer
+
+        self.fc3 = nn.Linear(128, action_size)  # Output layer
 
     def forward(self, x):
-        x = self.relu(self.fc1(x))
-        return self.fc2(x)
+        x = self.fc1(x)  # Pass input through the first layer
+        x = self.relu1(x)  # Apply ReLU activation
+        x = self.dropout1(x)  # Apply dropout
+
+        x = self.fc2(x)  # Pass through the second layer
+        x = self.relu2(x)  # Apply ReLU activation
+        x = self.dropout2(x)  # Apply dropout
+
+        x = self.fc3(x)  # Output layer
+
+        return x
 
 
 class DeepQLearningAgent(AbstractAgent):
@@ -38,6 +53,7 @@ class DeepQLearningAgent(AbstractAgent):
         target_update=10,
     ):
         super().__init__(nickname, should_save_model)
+        self.modelType = "DQ"
         self.state_size = state_size
         self.action_size = action_size
         self.memory = deque(maxlen=memory_size)
@@ -61,7 +77,9 @@ class DeepQLearningAgent(AbstractAgent):
 
     def select_move(self, game_engine):
         available_moves = pa.get_available_moves(game_engine)
-        state = pa.get_board_state(game_engine)
+        state = self.convert_state(
+            pa.get_board_state(game_engine), pa.get_dice_value(game_engine)
+        )
         if random.uniform(0, 1) < self.exploration_rate:
             action = random.choice(available_moves)
         else:
@@ -96,14 +114,26 @@ class DeepQLearningAgent(AbstractAgent):
         winner=None,
     ):
         if len(self.memory) < self.batch_size:
+            self.memorize_all_possible_transitions(
+                prev_state,
+                action,
+                reward,
+                new_states,
+                True if winner is not None else False,
+            )
             return
         mini_batch = random.sample(self.memory, self.batch_size)
         states, actions, rewards, next_states, dones = zip(*mini_batch)
 
+        if rewards is not None:
+            normalized_rewards = self.z_score_normalize_rewards(rewards)
+        else:
+            normalized_rewards = reward
+
         states = torch.FloatTensor(states)
         next_states = torch.FloatTensor(next_states)
         actions = torch.LongTensor(actions)
-        rewards = torch.FloatTensor(rewards)
+        rewards = torch.FloatTensor(normalized_rewards)
         dones = torch.FloatTensor(dones)
 
         # Get the current Q-values
@@ -111,6 +141,7 @@ class DeepQLearningAgent(AbstractAgent):
 
         # Compute the expected Q-values
         next_q_values = self.target_model(next_states).max(1)[0].detach()
+        next_q_values = next_q_values.mean(dim=1)
         expected_q_values = rewards + (
             self.discount_factor * next_q_values * (1 - dones)
         )
@@ -141,6 +172,12 @@ class DeepQLearningAgent(AbstractAgent):
         """
         self.memory.append((state, action, reward, next_state, done))
 
+    def memorize_all_possible_transitions(
+        self, state, action, reward, next_states, done
+    ):
+        for next_state in zip(next_states):
+            self.memory.append((state, action, reward, next_state, done))
+
     def update_target_model(self):
         """
         Copies the weights from the model to the target model.
@@ -155,3 +192,26 @@ class DeepQLearningAgent(AbstractAgent):
         """
         state = np.array(board_state).flatten().tolist() + [dice_value]
         return state
+
+    def z_score_normalize_rewards(self, rewards):
+        """
+        Normalizes rewards using Z-score normalization in pure Python.
+
+        Parameters:
+        - rewards: A list or tuple of rewards.
+
+        Returns:
+        - normalized_rewards: A list of Z-score normalized rewards.
+        """
+        mean_reward = sum(rewards) / len(rewards)
+        variance = sum((reward - mean_reward) ** 2 for reward in rewards) / len(rewards)
+        std_deviation = variance**0.5
+
+        # Avoid division by zero in case all rewards are the same
+        if std_deviation == 0:
+            return list(rewards)
+
+        normalized_rewards = [
+            (reward - mean_reward) / std_deviation for reward in rewards
+        ]
+        return normalized_rewards

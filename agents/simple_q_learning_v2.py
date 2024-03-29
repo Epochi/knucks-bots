@@ -26,6 +26,7 @@ class QLearningAgent(AbstractAgent):
         self.exploration_rate = exploration_rate
         self.exploration_decay = exploration_decay
         self.min_exploration_rate = min_exploration_rate
+        self.type = "QL"
 
     def select_move(self, game_engine):
         # Get the current state
@@ -93,14 +94,6 @@ class QLearningAgent(AbstractAgent):
         """
         Converts the current board state and dice value into a string for Q-Table.
         """
-        # flatten two arrays and concatinate into string
-        # when calculating own score only
-        # the max possible state size is = 592704 * 6 = 3,556,224
-        #   with 3 lists with 3 elements each,
-        #   with element value possible from 0 to 6,
-        #   and dice roll value from 1 to 6
-        #   max possible state for 2 player game is 7112448 = (592704 * 6) * 2
-
         state = "".join(
             str(col) for sublist in board_state for row in sublist for col in row
         ) + str(dice_value)

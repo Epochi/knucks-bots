@@ -32,10 +32,15 @@ class SimpleQWinReinforcementAgent(sq.QLearningAgent):
     def undo_memories(self):
         """undo all state changes"""
         for state, values in self.memory.items():
-            # decrease all values by 50%
-            values = [q * 0.5 for q in values]
+            # decrease all values by x%
+            # values = [q * 0.5 for q in values]
             self.model[state] = values
         self.memory = {}
+        # you suck, go explore
+        self.exploration_rate = max(
+            self.exploration_rate,
+            min(0.20),
+        )
 
     def learn(
         self,
@@ -50,5 +55,5 @@ class SimpleQWinReinforcementAgent(sq.QLearningAgent):
 
         self.memorize(prev_state, self.model[prev_state])
 
-        if game_over and not winner:
+        if winner is not None and winner != 1:
             self.undo_memories()

@@ -102,29 +102,32 @@ def deep_q_tuned_vs_random():
     parametrized_reward_model = rm.ParametrizedRewardModel(
         reward_loss_amount=-100,
         reward_win_amount=100,
+        reward_score_increase_multiplier=0.001,
         reward_score_diff_multiplier=0.01,
         reward_score_incerease_multiplier_multiplier=0.001,
         reward_opponent_score_decrease_multiplier_multiplier=0.001,
     )
     player_1 = PlayingAgent(
         DeepQLearningAgent(
-            learning_rate=0.01,
+            learning_rate=0.0005,
             discount_factor=0.99,
             exploration_rate=1.0,
-            exploration_decay=0.99,
-            min_exploration_rate=0.1,
+            exploration_decay=0.995,
+            min_exploration_rate=0.01,
             batch_size=64,
-            memory_size=5000,
-            target_update=10,
-            state_size=63 + 63 + 6,
+            memory_size=100000,
+            target_update=10000,
+            state_size=19,
             nickname="AlphaNegativeOne",
         ),
         parametrized_reward_model.calculate_reward,
-        # "deep_q_tuned_vs_random",
+        "deep_q_tuned_vs_random",
     )
     player_2 = PlayingAgent(RandomAgent(), None)
     game_rules = GameRules(should_remove_opponents_dice=True)
-    agent_trainer.train_agents(player_1, player_2, game_rules, episodes=1 * 1000 * 1000)
+    agent_trainer.train_agents(
+        player_1, player_2, game_rules, episodes=100 * 1000 * 1000
+    )
 
 
 # python -c 'from training import trainer_runner; trainer_runner.deep_q_full_game_vs_random_qucik_learner()'
@@ -212,10 +215,10 @@ def train_simple_selective_memory_vs_random():
     player_1 = PlayingAgent(
         SimpleQWinReinforcementAgent(
             nickname="Selective Memory",
-            min_exploration_rate=0.05,
-            exploration_decay=0.9995,
-            learning_rate=0.01,
-            discount_factor=0.99,
+            min_exploration_rate=0.1,
+            exploration_decay=0.99,
+            learning_rate=0.1,
+            discount_factor=0.995,
         ),
         parametrized_reward_model.calculate_reward,
         # "train_simple_vs_random_full_game_multiply_only",

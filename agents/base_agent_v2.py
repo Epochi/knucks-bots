@@ -19,6 +19,7 @@ class AbstractAgent(ABC):
         self.should_save_model = should_save_model
         self.nickname = nickname
         self.model = {}
+        self.modelType = "None"
 
     @abstractmethod
     def select_move(self, game_engine):
