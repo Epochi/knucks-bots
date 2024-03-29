@@ -67,6 +67,8 @@ def player_move(game_engine: GameEngine, agent: PlayingAgent, game_rules=GameRul
             action=action,
             reward=reward,
             new_states=post_move_states,
+            game_over=pa.get_game_over(game_engine),
+            winner=pa.did_i_win(game_engine),
         )
 
     pa.end_turn(game_engine)

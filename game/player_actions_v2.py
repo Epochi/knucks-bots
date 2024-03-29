@@ -119,7 +119,9 @@ def did_i_win(engine: GameEngine):
             return 1
         if engine.winner == -1:
             return 0
-        return -1
+        if engine.winner != engine.current_player:
+            return -1
+        return None
 
 
 def get_winner(engine: GameEngine):

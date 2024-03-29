@@ -86,7 +86,15 @@ class DeepQLearningAgent(AbstractAgent):
 
         return action
 
-    def learn(self, prev_state: str, action: tuple, reward: int, new_states: list):
+    def learn(
+        self,
+        prev_state: str,
+        action: tuple,
+        reward: int,
+        new_states: list,
+        game_over: bool,
+        winner=None,
+    ):
         if len(self.memory) < self.batch_size:
             return
         mini_batch = random.sample(self.memory, self.batch_size)

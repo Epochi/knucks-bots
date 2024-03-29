@@ -33,7 +33,15 @@ class AbstractAgent(ABC):
         :return: row, col move to make
         """
 
-    def learn(self, prev_state, action, reward, new_state):
+    def learn(
+        self,
+        prev_state,
+        action,
+        reward,
+        new_state,
+        game_over,
+        winner,
+    ):
         """
         Update the Q-Table based on the previous state, action, reward, and new state.
         """

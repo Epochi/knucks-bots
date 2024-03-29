@@ -3,6 +3,7 @@ import training.reward_models_v2 as rm
 from agents.random_agent_v2 import RandomAgent
 from agents.simple_q_learning_v2 import QLearningAgent
 from agents.deep_q_learning import DeepQLearningAgent
+from agents.simple_q_win_reinforcment import SimpleQWinReinforcementAgent
 from utils.play_game import PlayingAgent, GameRules
 
 
@@ -187,7 +188,7 @@ def train_simple_vs_random_full_game_multiply_only():
         QLearningAgent(
             nickname="Simple, but Brave",
             min_exploration_rate=0.001,
-            exploration_decay=0.995,
+            exploration_decay=0.9995,
             learning_rate=0.01,
             discount_factor=0.99,
         ),
@@ -197,6 +198,33 @@ def train_simple_vs_random_full_game_multiply_only():
     player_2 = PlayingAgent(RandomAgent(), None)
     game_rules = GameRules(should_remove_opponents_dice=True)
     agent_trainer.train_agents(player_1, player_2, game_rules, episodes=1 * 1000 * 1000)
+
+
+#  python -c 'from training import trainer_runner; trainer_runner.train_simple_selective_memory_vs_random()'
+def train_simple_selective_memory_vs_random():
+    parametrized_reward_model = rm.ParametrizedRewardModel(
+        reward_win_amount=100,
+        reward_score_increase_multiplier=0.1,
+        reward_score_diff_multiplier=0.1,
+        reward_score_incerease_multiplier_multiplier=0.1,
+        reward_opponent_score_decrease_multiplier_multiplier=0.01,
+    )
+    player_1 = PlayingAgent(
+        SimpleQWinReinforcementAgent(
+            nickname="Selective Memory",
+            min_exploration_rate=0.001,
+            exploration_decay=0.9995,
+            learning_rate=0.01,
+            discount_factor=0.99,
+        ),
+        parametrized_reward_model.calculate_reward,
+        # "train_simple_vs_random_full_game_multiply_only",
+    )
+    player_2 = PlayingAgent(RandomAgent(), None)
+    game_rules = GameRules(should_remove_opponents_dice=True)
+    agent_trainer.train_agents(
+        player_1, player_2, game_rules, episodes=10 * 1000 * 1000
+    )
 
 
 # python -c 'from training import trainer_runner; trainer_runner.train_simple_vs_deep_q_full_game_multiply_only()'

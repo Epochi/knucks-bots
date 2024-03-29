@@ -54,7 +54,15 @@ class QLearningAgent(AbstractAgent):
 
         return action
 
-    def learn(self, prev_state: str, action: tuple, reward: int, new_states: list):
+    def learn(
+        self,
+        prev_state: str,
+        action: tuple,
+        reward: int,
+        new_states: list,
+        game_over: bool,
+        winner=None,
+    ):
         """update the Q-table based on the reward received"""
         # Ensure the state entries exist in the Q-table
 
