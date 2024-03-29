@@ -43,11 +43,14 @@ class QLearningAgent(AbstractAgent):
         else:
             q_values = self.model[state]
             # filter out actions from the Q-table that are not in the available moves
-            available_moves_q_values = {
-                k: v for k, v in q_values.items() if k in available_moves
-            }
+            available_moves_q_values = [q_values[i] for i in available_moves]
+            if all(q == 0 for q in available_moves_q_values):
+                # if all the available actions have a Q-value of 0, then select a random action
+                action = random.choice(available_moves)
             # select the available action with the highest Q-value
-            action = max(available_moves_q_values, key=available_moves_q_values.get)
+            action = available_moves[
+                available_moves_q_values.index(max(available_moves_q_values))
+            ]
 
         return action
 
@@ -56,7 +59,7 @@ class QLearningAgent(AbstractAgent):
         # Ensure the state entries exist in the Q-table
 
         if prev_state not in self.model:
-            self.model[prev_state] = {0: 0, 1: 0, 2: 0}
+            self.model[prev_state] = [0.0, 0.0, 0.0]
 
         # update Q-Value for the taken action in the previous state
         current_q_value = self.model[prev_state][action]
@@ -64,7 +67,7 @@ class QLearningAgent(AbstractAgent):
         max_future_reward = 0
         for state in new_states:
             if state in self.model:
-                max_reward_for_state = max(self.model[state].values())
+                max_reward_for_state = max(self.model[state])
                 max_future_reward = max(max_future_reward, max_reward_for_state)
 
         new_q_value = current_q_value + self.learning_rate * (
@@ -88,6 +91,7 @@ class QLearningAgent(AbstractAgent):
         #   with 3 lists with 3 elements each,
         #   with element value possible from 0 to 6,
         #   and dice roll value from 1 to 6
+        #   max possible state for 2 player game is 7112448 = (592704 * 6) * 2
 
         state = "".join(
             str(col) for sublist in board_state for row in sublist for col in row

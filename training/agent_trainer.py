@@ -144,6 +144,8 @@ def train_agents(
         f"Training completed. {player_1.agent.nickname} Wins: {wins:,}, {player_2.agent.nickname} Wins: {losses:,}, Draws: {draws:,}"
     )
 
+    return wins, losses, draws
+
 
 def save_list(list, save_path):
     """Save the List to a file."""
