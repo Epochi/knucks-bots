@@ -212,7 +212,7 @@ def train_simple_selective_memory_vs_random():
     player_1 = PlayingAgent(
         SimpleQWinReinforcementAgent(
             nickname="Selective Memory",
-            min_exploration_rate=0.001,
+            min_exploration_rate=0.05,
             exploration_decay=0.9995,
             learning_rate=0.01,
             discount_factor=0.99,

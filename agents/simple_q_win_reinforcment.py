@@ -32,6 +32,8 @@ class SimpleQWinReinforcementAgent(sq.QLearningAgent):
     def undo_memories(self):
         """undo all state changes"""
         for state, values in self.memory.items():
+            # decrease all values by 50%
+            values = [q * 0.5 for q in values]
             self.model[state] = values
         self.memory = {}
 

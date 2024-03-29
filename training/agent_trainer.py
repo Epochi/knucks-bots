@@ -102,8 +102,12 @@ def train_agents(
             print(
                 f"{player_1.agent.nickname} Wins: {wins:,}, {player_2.agent.nickname} Wins: {losses:,}, Draws: {draws:,}"
             )
+            # print diff in wins and % from mean
             print(
-                "We just won!" if pa.get_winner(game_engine) == 0 else "We just lost!"
+                f"\nWin difference: {abs(wins - losses):,} - % from mean: {abs(wins - losses) / (wins + losses + draws) * 100:.2f}% - in the lead: {player_1.agent.nickname if wins > losses else player_2.agent.nickname}"
+            )
+            print(
+                "\nWe just won!" if pa.get_winner(game_engine) == 0 else "We just lost!"
             )
             print(
                 f"Scores: {player_1.agent.nickname}: {pa.get_score(game_engine)[0]},  {player_2.agent.nickname}: {pa.get_score(game_engine)[1]}"
