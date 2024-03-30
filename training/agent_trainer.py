@@ -6,6 +6,7 @@ import time
 from math import comb
 import game.player_actions_v2 as pa
 from utils.play_game import PlayingAgent, GameRules, player_move
+import datetime
 
 interrupted = False
 
@@ -100,7 +101,7 @@ def train_agents(
             print("\nPerformance stats:")
             if perf_timer:
                 print(
-                    f"Time taken for {heartbeat:,} episodes: {time.time() - perf_timer}"
+                    f"Time taken for {heartbeat:,} episodes: {str(datetime.timedelta(seconds=int(time.time() - perf_timer)))}"
                 )
             # objgraph.show_most_common_types()
 

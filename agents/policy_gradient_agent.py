@@ -59,9 +59,7 @@ class PolicyGradientAgent(AbstractAgent):
         available_probabilities = probabilities[available_moves]
         available_probabilities /= available_probabilities.sum()
 
-        action = np.random.choice(
-            available_moves, p=probabilities[available_probabilities]
-        )
+        action = np.random.choice(available_moves, p=available_probabilities)
         return action
 
     def learn(self, prev_state, action, reward, new_states, game_over, winner=None):
