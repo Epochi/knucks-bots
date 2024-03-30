@@ -71,7 +71,7 @@ class PolicyGradientAgent(AbstractAgent):
                 True if winner is not None else False,
             )
         )
-        if game_over:
+        if True if winner is not None else False:
             states, actions, rewards, dones = zip(*self.memory)
             self.optimize_model(states, actions, rewards)
             self.memory.clear()
