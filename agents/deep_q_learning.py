@@ -8,6 +8,10 @@ from collections import deque
 from agents.base_agent_v2 import AbstractAgent
 import game.player_actions_v2 as pa
 
+# Define the device: Use GPU if available, else use CPU
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"Using device: {device}")
+
 
 class DQN(nn.Module):
     def __init__(self, state_size, action_size):
@@ -65,8 +69,8 @@ class DeepQLearningAgent(AbstractAgent):
         self.target_update = target_update
         self.update_count = 0
 
-        self.model = DQN(state_size, action_size)
-        self.target_model = DQN(state_size, action_size)
+        self.model = DQN(state_size, action_size).to(device)
+        self.target_model = DQN(state_size, action_size).to(device)
         self.optimizer = optim.Adam(self.model.parameters(), lr=learning_rate)
         self.criterion = nn.MSELoss()
 
@@ -84,8 +88,8 @@ class DeepQLearningAgent(AbstractAgent):
             action = random.choice(available_moves)
         else:
             # Exploitation: Select the action with the highest predicted Q-value from the available moves
-            state = torch.FloatTensor(state).unsqueeze(
-                0
+            state = (
+                torch.FloatTensor(state).unsqueeze(0).to(device)
             )  # Convert state to tensor and add batch dimension
             self.model.eval()  # Set the model to evaluation mode
             with torch.no_grad():
@@ -130,11 +134,11 @@ class DeepQLearningAgent(AbstractAgent):
         else:
             normalized_rewards = reward
 
-        states = torch.FloatTensor(states)
-        next_states = torch.FloatTensor(next_states)
-        actions = torch.LongTensor(actions)
-        rewards = torch.FloatTensor(normalized_rewards)
-        dones = torch.FloatTensor(dones)
+        states = torch.FloatTensor(states).to(device)
+        next_states = torch.FloatTensor(next_states).to(device)
+        actions = torch.LongTensor(actions).to(device)
+        rewards = torch.FloatTensor(normalized_rewards).to(device)
+        dones = torch.FloatTensor(dones).to(device)
 
         # Get the current Q-values
         curr_q_values = self.model(states).gather(1, actions.unsqueeze(1)).squeeze(1)
