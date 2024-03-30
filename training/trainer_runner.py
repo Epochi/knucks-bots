@@ -5,6 +5,7 @@ from agents.simple_q_learning_v2 import QLearningAgent
 from agents.deep_q_learning import DeepQLearningAgent
 from agents.simple_q_win_reinforcment import SimpleQWinReinforcementAgent
 from utils.play_game import PlayingAgent, GameRules
+from agents.policy_gradient_agent import PolicyGradientAgent
 
 
 # python -c 'from training import trainer_runner; trainer_runner.train_simple_vs_random()'
@@ -121,7 +122,33 @@ def deep_q_tuned_vs_random():
             nickname="AlphaNegativeOne",
         ),
         parametrized_reward_model.calculate_reward,
-        "deep_q_tuned_vs_random",
+        "deep_q_tuned_vs_random_gpu",
+    )
+    player_2 = PlayingAgent(RandomAgent(), None)
+    game_rules = GameRules(should_remove_opponents_dice=True)
+    agent_trainer.train_agents(
+        player_1, player_2, game_rules, episodes=100 * 1000 * 1000
+    )
+
+
+# python -c 'from training import trainer_runner; trainer_runner.policy_agent_vs_random()'
+def policy_agent_vs_random():
+    parametrized_reward_model = rm.ParametrizedRewardModel(
+        reward_loss_amount=-100,
+        reward_win_amount=100,
+        reward_score_increase_multiplier=0.001,
+        reward_score_diff_multiplier=0.01,
+        reward_score_incerease_multiplier_multiplier=0.001,
+        reward_opponent_score_decrease_multiplier_multiplier=0.001,
+    )
+    player_1 = PlayingAgent(
+        PolicyGradientAgent(
+            learning_rate=0.001,
+            state_size=19,
+            nickname="Policier",
+        ),
+        parametrized_reward_model.calculate_reward,
+        "policy_gradient_vs_random_gpu",
     )
     player_2 = PlayingAgent(RandomAgent(), None)
     game_rules = GameRules(should_remove_opponents_dice=True)
@@ -177,32 +204,6 @@ def simple_high_explore_vs_random_no_removal_reward_multiply_only():
     )
 
 
-# python -c 'from training import trainer_runner; trainer_runner.train_simple_vs_random_full_game_multiply_only()'
-# Simple, but Brave Wins: 4,987,622, Wild Card Wins: 4,845,584, Draws: 156,795
-def train_simple_vs_random_full_game_multiply_only():
-    parametrized_reward_model = rm.ParametrizedRewardModel(
-        reward_loss_amount=-100,
-        reward_win_amount=100,
-        reward_score_diff_multiplier=0.1,
-        reward_score_incerease_multiplier_multiplier=0.1,
-        reward_opponent_score_decrease_multiplier_multiplier=0.01,
-    )
-    player_1 = PlayingAgent(
-        QLearningAgent(
-            nickname="Simple, but Brave",
-            min_exploration_rate=0.001,
-            exploration_decay=0.9995,
-            learning_rate=0.01,
-            discount_factor=0.99,
-        ),
-        parametrized_reward_model.calculate_reward,
-        # "train_simple_vs_random_full_game_multiply_only",
-    )
-    player_2 = PlayingAgent(RandomAgent(), None)
-    game_rules = GameRules(should_remove_opponents_dice=True)
-    agent_trainer.train_agents(player_1, player_2, game_rules, episodes=1 * 1000 * 1000)
-
-
 #  python -c 'from training import trainer_runner; trainer_runner.train_simple_selective_memory_vs_random()'
 def train_simple_selective_memory_vs_random():
     parametrized_reward_model = rm.ParametrizedRewardModel(
@@ -224,33 +225,6 @@ def train_simple_selective_memory_vs_random():
         # "train_simple_vs_random_full_game_multiply_only",
     )
     player_2 = PlayingAgent(RandomAgent(), None)
-    game_rules = GameRules(should_remove_opponents_dice=True)
-    agent_trainer.train_agents(
-        player_1, player_2, game_rules, episodes=10 * 1000 * 1000
-    )
-
-
-# python -c 'from training import trainer_runner; trainer_runner.train_simple_vs_deep_q_full_game_multiply_only()'
-def train_simple_vs_deep_q_full_game_multiply_only():
-    player_1 = PlayingAgent(
-        QLearningAgent(
-            nickname="Simple, but Brave",
-            min_exploration_rate=0.05,
-            exploration_decay=0.9999,
-            should_save_model=False,
-        ),
-        rm.calculate_for_multiples_and_removals_score,
-        model_name="train_simple_vs_random_full_game_multiply_only",
-    )
-    player_2 = PlayingAgent(
-        DeepQLearningAgent(
-            state_size=63 + 63 + 6,
-            nickname="AlphaMinusOne",
-            should_save_model=False,
-        ),
-        None,
-        model_name="deep_q_full_game_vs_random",
-    )
     game_rules = GameRules(should_remove_opponents_dice=True)
     agent_trainer.train_agents(
         player_1, player_2, game_rules, episodes=10 * 1000 * 1000
