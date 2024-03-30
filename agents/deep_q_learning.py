@@ -8,10 +8,6 @@ from collections import deque
 from agents.base_agent_v2 import AbstractAgent
 import game.player_actions_v2 as pa
 
-# Define the device: Use GPU if available, else use CPU
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-print(f"Using device: {device}")
-
 
 class DQN(nn.Module):
     def __init__(self, state_size, action_size):
@@ -43,7 +39,7 @@ class DQN(nn.Module):
 class DeepQLearningAgent(AbstractAgent):
     def __init__(
         self,
-        state_size,
+        state_size=19,
         action_size=3,
         nickname="The Brain",
         should_save_model=True,
@@ -55,8 +51,9 @@ class DeepQLearningAgent(AbstractAgent):
         memory_size=10000,
         batch_size=64,
         target_update=10,
+        device="cuda",
     ):
-        super().__init__(nickname, should_save_model)
+        super().__init__(nickname, should_save_model, device)
         self.modelType = "DQ"
         self.state_size = state_size
         self.action_size = action_size
@@ -89,7 +86,7 @@ class DeepQLearningAgent(AbstractAgent):
         else:
             # Exploitation: Select the action with the highest predicted Q-value from the available moves
             state = (
-                torch.FloatTensor(state).unsqueeze(0).to(device)
+                torch.FloatTensor(state).unsqueeze(0).to(self.device)
             )  # Convert state to tensor and add batch dimension
             self.model.eval()  # Set the model to evaluation mode
             with torch.no_grad():
@@ -113,7 +110,7 @@ class DeepQLearningAgent(AbstractAgent):
         prev_state: str,
         action: tuple,
         reward: int,
-        new_states: list,
+        next_state: str,
         game_over: bool,
         winner=None,
     ):
@@ -122,31 +119,25 @@ class DeepQLearningAgent(AbstractAgent):
                 prev_state,
                 action,
                 reward,
-                new_states,
-                True if winner is not None else False,
+                next_state,
+                game_over,
             )
             return
         mini_batch = random.sample(self.memory, self.batch_size)
-        states, actions, rewards, next_states, dones = zip(*mini_batch)
+        states, actions, rewards, next_state, dones = zip(*mini_batch)
 
-        if rewards is not None:
-            normalized_rewards = self.z_score_normalize_rewards(rewards)
-        else:
-            normalized_rewards = reward
+        states = torch.FloatTensor(states).to(self.device)
+        next_state = torch.FloatTensor(next_state).to(self.device)
+        actions = torch.LongTensor(actions).to(self.device)
+        rewards = torch.FloatTensor(rewards).to(self.device)
+        normalized_rewards = self.z_score_normalize_rewards(rewards)
+        dones = torch.FloatTensor(dones).to(self.device)
 
-        states = torch.FloatTensor(states).to(device)
-        next_states = torch.FloatTensor(next_states).to(device)
-        actions = torch.LongTensor(actions).to(device)
-        rewards = torch.FloatTensor(normalized_rewards).to(device)
-        dones = torch.FloatTensor(dones).to(device)
-
-        # Get the current Q-values
         curr_q_values = self.model(states).gather(1, actions.unsqueeze(1)).squeeze(1)
 
-        # Compute the expected Q-values
-        next_q_values = self.target_model(next_states).max(1)[0].detach()
-        next_q_values = next_q_values.mean(dim=1)
-        expected_q_values = rewards + (
+        next_q_values = self.target_model(next_state).max(1)[0].detach()
+        next_q_values = next_q_values.mean()
+        expected_q_values = normalized_rewards + (
             self.discount_factor * next_q_values * (1 - dones)
         )
 
@@ -177,10 +168,10 @@ class DeepQLearningAgent(AbstractAgent):
         self.memory.append((state, action, reward, next_state, done))
 
     def memorize_all_possible_transitions(
-        self, state, action, reward, next_states, done
+        self, state, action, reward, next_state, done
     ):
-        for next_state in zip(next_states):
-            self.memory.append((state, action, reward, next_state, done))
+
+        self.memory.append((state, action, reward, next_state, done))
 
     def update_target_model(self):
         """
@@ -199,23 +190,37 @@ class DeepQLearningAgent(AbstractAgent):
 
     def z_score_normalize_rewards(self, rewards):
         """
-        Normalizes rewards using Z-score normalization in pure Python.
+        Normalizes rewards using Z-score normalization using PyTorch.
 
         Parameters:
-        - rewards: A list or tuple of rewards.
+        - rewards: A PyTorch tensor of rewards.
 
         Returns:
-        - normalized_rewards: A list of Z-score normalized rewards.
+        - normalized_rewards: A tensor of Z-score normalized rewards.
         """
-        mean_reward = sum(rewards) / len(rewards)
-        variance = sum((reward - mean_reward) ** 2 for reward in rewards) / len(rewards)
-        std_deviation = variance**0.5
+        mean_reward = torch.mean(rewards)
+        std_deviation = torch.std(rewards)
 
         # Avoid division by zero in case all rewards are the same
-        if std_deviation == 0:
-            return list(rewards)
+        # std_deviation might be 0 if all rewards are the same, add a small epsilon to avoid division by zero
+        normalized_rewards = (rewards - mean_reward) / (std_deviation + 1e-8)
 
-        normalized_rewards = [
-            (reward - mean_reward) / std_deviation for reward in rewards
-        ]
+        return normalized_rewards
+
+    def min_max_normalize_rewards(self, rewards):
+        """
+        Normalizes rewards using Min-Max normalization using PyTorch.
+
+        Parameters:
+        - rewards: A PyTorch tensor of rewards.
+
+        Returns:
+        - normalized_rewards: A tensor of Min-Max normalized rewards.
+        """
+        min_reward = torch.min(rewards)
+        max_reward = torch.max(rewards)
+
+        # The range might be 0 if all rewards are the same, add a small epsilon to avoid division by zero
+        normalized_rewards = (rewards - min_reward) / (max_reward - min_reward + 1e-8)
+
         return normalized_rewards

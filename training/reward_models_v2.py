@@ -21,7 +21,7 @@ class AbstractRewardModel(ABC):
         prev_scores: tuple,
         action: tuple,
         new_state: str,
-        new_scores: tuple,
+        next_scores: tuple,
         dice_placed: int,
     ):
         """
@@ -33,7 +33,7 @@ class AbstractRewardModel(ABC):
         prev_scores: The previous scores.
         action: The action taken.
         new_state: The new state after the action.
-        new_scores: The new scores after the action.
+        next_scores: The new scores after the action.
         dice_placed: The dice value placed.
 
         Returns:
@@ -74,8 +74,8 @@ class ParametrizedRewardModel(AbstractRewardModel):
         prev_state: str,
         prev_scores: tuple,
         action: tuple,
-        new_state: str,
-        new_scores: tuple,
+        next_state: str,
+        next_scores: tuple,
         dice_placed: int,
     ):
         """
@@ -87,15 +87,33 @@ class ParametrizedRewardModel(AbstractRewardModel):
         prev_scores: The previous scores.
         action: The action taken.
         new_state: The new state after the action.
-        new_scores: The new scores after the action.
+        next_scores: The new scores after the action.
         dice_placed: The dice value placed.
 
         Returns:
         The calculated reward.
         """
         reward = 0
-        player_score_diff = new_scores[0] - prev_scores[0]
-        opponent_score_diff = new_scores[1] - prev_scores[1]
+
+        # in case of game over, return early
+        # because we're looking at new state that happens after opponent's move, not after player move
+        # it means that there in case of winning, there is no new state or new scores
+        # ... well there kind of is, but because we're saving dice value in the state, it's not the same
+        if pa.get_game_over(game_engine):
+            if game_engine.winner == pa.did_i_win(game_engine):
+                reward += self.reward_win_multiplier
+                return reward
+            else:
+                reward += self.reward_loss_multiplier
+                return reward
+
+        player_score_diff = next_scores[0] - prev_scores[0]
+        opponent_score_diff = next_scores[1] - prev_scores[1]
+
+        # we need to get score diff score diff, because we don't want to penalize every player action for losing player score
+        # but how is it different from rewarding player for increasing score and decreasing opponent score?
+        # well, it's not, this should really not be used
+        # but it's here so I don't forget and add it in again
         score_diff = player_score_diff - opponent_score_diff
 
         # reward player for increasing score
@@ -133,8 +151,8 @@ def calculate_reward_template(
     prev_state: str,
     prev_scores: tuple,
     action: tuple,
-    new_state: str,
-    new_scores: tuple,
+    next_state: str,
+    next_scores: tuple,
     dice_placed: int,
 ):
     """
@@ -150,8 +168,8 @@ def calculate_reward_template(
     prev_state: The previous state.
     prev_scores: The previous scores.
     action: The action taken.
-    new_state: The new state after the action.
-    new_scores: The new scores after the action.
+    next_state: The new state after the action.
+    next_scores: The new scores after the action.
     dice_placed: The dice value placed.
 
     Returns:
@@ -167,8 +185,8 @@ def calculate_for_multiples_and_removals_score(
     prev_state: str,
     prev_scores: tuple,
     action: tuple,
-    new_state: str,
-    new_scores: tuple,
+    next_state: str,
+    next_scores: tuple,
     dice_placed: int,
 ):
     """
@@ -176,8 +194,8 @@ def calculate_for_multiples_and_removals_score(
     """
 
     reward = 0
-    player_score_diff = new_scores[0] - prev_scores[0]
-    opponent_score_diff = new_scores[1] - prev_scores[1]
+    player_score_diff = next_scores[0] - prev_scores[0]
+    opponent_score_diff = next_scores[1] - prev_scores[1]
 
     if player_score_diff > dice_placed:
         reward += player_score_diff
@@ -196,8 +214,8 @@ def calculate_score_parametrized(
     prev_state: str,
     prev_scores: tuple,
     action: tuple,
-    new_state: str,
-    new_scores: tuple,
+    next_state: str,
+    next_scores: tuple,
     dice_placed: int,
 ):
     """
@@ -205,8 +223,8 @@ def calculate_score_parametrized(
     """
 
     reward = 0
-    player_score_diff = new_scores[0] - prev_scores[0]
-    opponent_score_diff = new_scores[1] - prev_scores[1]
+    player_score_diff = next_scores[0] - prev_scores[0]
+    opponent_score_diff = next_scores[1] - prev_scores[1]
 
     if player_score_diff > dice_placed:
         reward += player_score_diff
@@ -227,8 +245,8 @@ def calculate_for_multiples_and_any_removals_score(
     prev_state: str,
     prev_scores: tuple,
     action: tuple,
-    new_state: str,
-    new_scores: tuple,
+    next_state: str,
+    next_scores: tuple,
     dice_placed: int,
 ):
     """
@@ -236,8 +254,8 @@ def calculate_for_multiples_and_any_removals_score(
     """
 
     reward = 0
-    player_score_diff = new_scores[0] - prev_scores[0]
-    opponent_score_diff = new_scores[1] - prev_scores[1]
+    player_score_diff = next_scores[0] - prev_scores[0]
+    opponent_score_diff = next_scores[1] - prev_scores[1]
 
     if player_score_diff > dice_placed:
         reward += player_score_diff
@@ -258,8 +276,8 @@ def calculate_for_own_score_only(
     prev_state: str,
     prev_scores: tuple,
     action: tuple,
-    new_state: str,
-    new_scores: tuple,
+    next_state: str,
+    next_scores: tuple,
     dice_placed: int,
 ):
     """
@@ -267,7 +285,7 @@ def calculate_for_own_score_only(
     """
 
     reward = 0
-    player_score_diff = new_scores[0] - prev_scores[0]
+    player_score_diff = next_scores[0] - prev_scores[0]
 
     # if player increased the score, reward very well
     if player_score_diff > 0:
@@ -284,15 +302,15 @@ def one_side_for_multiply_and_win_only(
     prev_state: str,
     prev_scores: tuple,
     action: tuple,
-    new_state: str,
-    new_scores: tuple,
+    next_state: str,
+    next_scores: tuple,
     dice_placed: int,
 ):
     """
     Only give rewards if agent manages to multiply the dice and win the game.
     """
     reward = 0
-    player_score_diff = new_scores[0] - prev_scores[0]
+    player_score_diff = next_scores[0] - prev_scores[0]
     if player_score_diff > dice_placed:
         reward += player_score_diff
 

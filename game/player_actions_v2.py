@@ -56,7 +56,7 @@ def end_turn(engine: GameEngine):
     engine.end_turn()
 
 
-def get_board_state(engine: GameEngine, should_return_both=True):
+def get_board_state(engine: GameEngine, should_return_both=True, player=None):
     """
     Get picture of the current board
     (if player 2, flip the board perspective)
@@ -64,10 +64,28 @@ def get_board_state(engine: GameEngine, should_return_both=True):
     :param engine: game engine
     :return: player board state
     """
-    if engine.current_player == 1:
-        board_state = engine.game_board.player_2_board, engine.game_board.player_1_board
-    else:
-        board_state = engine.game_board.player_1_board, engine.game_board.player_2_board
+    if player is not None:
+        if player == 0:
+            board_state = (
+                engine.game_board.player_1_board,
+                engine.game_board.player_2_board,
+            )
+        else:
+            board_state = (
+                engine.game_board.player_2_board,
+                engine.game_board.player_1_board,
+            )
+    if player is None:
+        if engine.current_player == 1:
+            board_state = (
+                engine.game_board.player_2_board,
+                engine.game_board.player_1_board,
+            )
+        else:
+            board_state = (
+                engine.game_board.player_1_board,
+                engine.game_board.player_2_board,
+            )
 
     if should_return_both:
         return board_state
@@ -84,13 +102,19 @@ def get_dice_value(engine: GameEngine):
     return engine.dice_value
 
 
-def get_score(engine: GameEngine):
+def get_score(engine: GameEngine, player=None):
     """
     get current game score
 
     :param engine: game engine
     :return: player score, opponent score
     """
+    if player is not None:
+        if player == 0:
+            return engine.game_board.player_1_score, engine.game_board.player_2_score
+        else:
+            return engine.game_board.player_2_score, engine.game_board.player_1_score
+
     if engine.current_player == 0:
         return engine.game_board.player_1_score, engine.game_board.player_2_score
     else:
@@ -126,7 +150,7 @@ def did_i_win(engine: GameEngine):
 
 def get_winner(engine: GameEngine):
     """
-    check if you won the game
+    check who
 
     :param engine: game engine
     :return: return if you won or not

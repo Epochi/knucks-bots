@@ -60,7 +60,7 @@ class QLearningAgent(AbstractAgent):
         prev_state: str,
         action: tuple,
         reward: int,
-        new_states: list,
+        next_state: str,
         game_over: bool,
         winner=None,
     ):
@@ -73,14 +73,10 @@ class QLearningAgent(AbstractAgent):
         # update Q-Value for the taken action in the previous state
         current_q_value = self.model[prev_state][action]
 
-        max_future_reward = 0
-        for state in new_states:
-            if state in self.model:
-                max_reward_for_state = max(self.model[state])
-                max_future_reward = max(max_future_reward, max_reward_for_state)
+        future_reward = self.model[next_state]
 
         new_q_value = current_q_value + self.learning_rate * (
-            reward + self.discount_factor * max_future_reward - current_q_value
+            reward + self.discount_factor * future_reward - current_q_value
         )
 
         self.model[prev_state][action] = new_q_value

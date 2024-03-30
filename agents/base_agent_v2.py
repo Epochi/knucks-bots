@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 import pickle
 import numpy as np
 import os
+import torch
 
 
 class AbstractAgent(ABC):
@@ -14,12 +15,17 @@ class AbstractAgent(ABC):
     based on the current game board state and the value of the rolled dice.
     """
 
-    def __init__(self, nickname="The Mysterion", should_save_model=True):
+    def __init__(self, nickname="The Mysterion", should_save_model=True, device="cuda"):
         """in case we want to add some common attributes to all agents in the future."""
         self.should_save_model = should_save_model
         self.nickname = nickname
         self.model = {}
         self.modelType = "None"
+        if device == "cuda" and torch.cuda.is_available():
+            self.device = torch.device("cuda")
+        else:
+            self.device = torch.device("cpu")
+        print(f"Agent {self.nickname} is running on device: {self.device}")
 
     @abstractmethod
     def select_move(self, game_engine):
@@ -39,7 +45,7 @@ class AbstractAgent(ABC):
         prev_state,
         action,
         reward,
-        new_state,
+        next_state,
         game_over,
         winner,
     ):

@@ -3,9 +3,11 @@
 import signal
 import pickle
 import time
+import copy
 from math import comb
 import game.player_actions_v2 as pa
 from utils.play_game import PlayingAgent, GameRules, player_move
+from game.game_engine_v2 import GameEngine
 import datetime
 
 interrupted = False
@@ -67,32 +69,140 @@ def train_agents(
 
         move_counter = 0
 
+        previous_move = {
+            player_1: {
+                "state": None,
+                "scores": None,
+                "dice": None,
+                "action": None,
+            },
+            player_2: {
+                "state": None,
+                "scores": None,
+                "dice": None,
+                "action": None,
+            },
+        }
         while not pa.get_game_over(game_engine):
-            current_player = (
-                player_1 if pa.get_current_player(game_engine) == 0 else player_2
+            if pa.get_current_player(game_engine) == 0:
+                current_player = player_1
+            else:
+                current_player = player_2
+
+            pa.start_turn(game_engine)
+            dice_value = pa.get_dice_value(game_engine)
+
+            # we're selecting the action before we calculated reward for the previous move :thinking:
+
+            if current_player.reward_func is not None:
+                next_state = current_player.agent.convert_state(
+                    pa.get_board_state(game_engine),
+                    dice_value,
+                )
+                next_state_scores = pa.get_score(game_engine)
+
+                if move_counter > 1:
+                    delayed_reward(
+                        game_engine=game_engine,
+                        player=current_player,
+                        prev_state=previous_move[current_player]["state"],
+                        prev_scores=previous_move[current_player]["scores"],
+                        prev_dice=previous_move[current_player]["dice"],
+                        prev_action=previous_move[current_player]["action"],
+                        next_state=next_state,
+                        next_scores=next_state_scores,
+                        game_over=pa.get_game_over(game_engine),
+                        winner=pa.get_winner(game_engine),
+                    )
+                previous_move[current_player]["state"] = copy.deepcopy(next_state)
+                previous_move[current_player]["scores"] = copy.deepcopy(
+                    next_state_scores
+                )
+                previous_move[current_player]["dice"] = dice_value
+
+            action = current_player.agent.select_move(game_engine)
+            pa.do_move(game_engine, action)
+            pa.end_turn(game_engine)
+
+            if current_player.reward_func is not None:
+                previous_move[current_player]["action"] = action
+
+            move_counter += 1
+
+        # run delayed reward after the game is over
+        # we know that game engine current player is the one that did the last move, since we do not switch players after end_turn
+        if pa.get_current_player(game_engine) == 0:
+            last_player_index = 0
+            last_player = player_1
+            before_last_player = player_2
+            before_last_player_index = 1
+        else:
+            last_player_index = 1
+            last_player = player_2
+            before_last_player = player_1
+            before_last_player_index = 0
+
+        if last_player.reward_func is not None:
+            # for the last state we always pass dice value 0, since it's not relevant
+            delayed_reward(
+                game_engine=game_engine,
+                player=last_player,
+                prev_state=previous_move[last_player]["state"],
+                prev_scores=previous_move[last_player]["scores"],
+                prev_dice=previous_move[last_player]["dice"],
+                prev_action=previous_move[last_player]["action"],
+                next_state=last_player.agent.convert_state(
+                    pa.get_board_state(
+                        engine=game_engine,
+                        player=last_player_index,
+                    ),
+                    dice_value,
+                ),
+                next_scores=pa.get_score(engine=game_engine, player=last_player_index),
+                game_over=True,
+                winner=pa.get_winner(game_engine),
             )
 
-            player_move(game_engine, current_player, game_rules)
-            move_counter += 1
-        # Check game outcome
-        if pa.get_game_over(game_engine):
-            winner = pa.get_winner(game_engine)
-            if winner == 0:
-                wins += 1
-                if write_result_history:
-                    result_history.append(1)
-            elif winner == 1:
-                losses += 1
-                if write_result_history:
-                    result_history.append(-1)
-            else:
-                draws += 1
-                if write_result_history:
-                    result_history.append(0)
+        if before_last_player.reward_func is not None:
+            # for the last state we always pass dice value 0, since it's not relevant
+            delayed_reward(
+                game_engine=game_engine,
+                player=before_last_player,
+                prev_state=previous_move[before_last_player]["state"],
+                prev_scores=previous_move[before_last_player]["scores"],
+                prev_dice=previous_move[before_last_player]["dice"],
+                prev_action=previous_move[before_last_player]["action"],
+                next_state=before_last_player.agent.convert_state(
+                    pa.get_board_state(
+                        engine=game_engine,
+                        player=last_player_index,
+                    ),
+                    dice_value,
+                ),
+                next_scores=pa.get_score(
+                    engine=game_engine, player=before_last_player_index
+                ),
+                game_over=True,
+                winner=pa.get_winner(game_engine),
+            )
 
-            total_moves += move_counter
-            average_moves_per_game = total_moves / (episode + 1)
-            move_counter = 0
+        winner = pa.get_winner(game_engine)
+        if winner == 0:
+            wins += 1
+            if write_result_history:
+                result_history.append(1)
+        elif winner == 1:
+            losses += 1
+            if write_result_history:
+                result_history.append(-1)
+        else:
+            draws += 1
+            if write_result_history:
+                result_history.append(0)
+
+        total_moves += move_counter
+        average_moves_per_game = total_moves / (episode + 1)
+        move_counter = 0
 
         # sanity check, print game every 10% of the episodes, but not more rarely than 1000
         if is_heartbeat:
@@ -194,6 +304,43 @@ def train_agents(
     )
 
     return wins, losses, draws
+
+
+def delayed_reward(
+    game_engine: GameEngine,
+    player: PlayingAgent,
+    prev_state: str,
+    prev_scores: tuple,
+    prev_action: tuple,
+    prev_dice: int,
+    next_state: str,
+    next_scores: tuple,
+    game_over: bool,
+    winner: int,
+):
+    reward = player.reward_func(
+        game_engine=game_engine,
+        prev_state=prev_state,
+        prev_scores=prev_scores,
+        action=prev_action,
+        # we're calculating score for the previous turn
+        dice_placed=prev_dice,
+        # this is really before the new move, but from perspective of the previous turn, it's the new state
+        next_state=next_state,
+        next_scores=next_scores,
+    )
+    # print(
+    #     f"prev_state: {prev_state}, prev_scores: {prev_scores}, prev_action: {prev_action}, prev_dice: {prev_dice}, next_state: {next_state}, next_scores: {next_scores}, game_over: {game_over}, winner: {winner}, reward: {reward}"
+    # )
+
+    player.agent.learn(
+        prev_state=prev_state,
+        action=prev_action,
+        reward=reward,
+        next_state=next_state,
+        game_over=game_over,
+        winner=winner,
+    )
 
 
 def save_list(list, save_path):

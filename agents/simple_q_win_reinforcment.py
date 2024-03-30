@@ -47,11 +47,11 @@ class SimpleQWinReinforcementAgent(sq.QLearningAgent):
         prev_state: str,
         action: tuple,
         reward: int,
-        new_states: list,
+        next_state: str,
         game_over=False,
         winner=None,
     ):
-        super().learn(prev_state, action, reward, new_states, game_over, winner)
+        super().learn(prev_state, action, reward, next_state, game_over, winner)
 
         self.memorize(prev_state, self.model[prev_state])
 

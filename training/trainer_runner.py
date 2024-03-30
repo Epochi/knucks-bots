@@ -46,15 +46,13 @@ def train_simple_vs_random_multiply_only():
 
 
 # python -c 'from training import trainer_runner; trainer_runner.deep_q_vs_random()'
-# The Brain that thinks that it plays with itself Wins: 48,947,680, Wild Card Wins: 48,944,365, Draws: 2,097,956
 def deep_q_vs_random():
     player_1 = PlayingAgent(
         DeepQLearningAgent(
-            state_size=63 + 6,
             nickname="The Brain that thinks that it plays with itself",
         ),
         rm.one_side_for_multiply_and_win_only,
-        "deep_q_by_score_vs_random_game_no_removal",
+        # "deep_q_by_score_vs_random_game_no_removal",
     )
     player_2 = PlayingAgent(RandomAgent(), None)
     game_rules = GameRules(max_dice_value=6, should_remove_opponents_dice=False)
@@ -64,28 +62,30 @@ def deep_q_vs_random():
 
 
 # python -c 'from training import trainer_runner; trainer_runner.deep_q_full_game_vs_random()'
-# Training completed. AlphaMinusOne Wins: 24,606,330, Wild Card Wins: 24,603,382, Draws: 790,288
 def deep_q_full_game_vs_random():
+    parametrized_reward_model = rm.ParametrizedRewardModel(
+        reward_loss_amount=-100,
+        reward_win_amount=100,
+        reward_score_increase_multiplier=0.01,
+        reward_score_incerease_multiplier_multiplier=0.01,
+        reward_opponent_score_decrease_multiplier_multiplier=0.01,
+    )
     player_1 = PlayingAgent(
         DeepQLearningAgent(
-            state_size=63 + 63 + 6,
             nickname="AlphaMinusOne",
         ),
-        rm.calculate_for_multiples_and_removals_score,
-        "deep_q_full_game_vs_random",
+        parametrized_reward_model.calculate_reward,
+        # "deep_q_full_game_vs_random",
     )
     player_2 = PlayingAgent(RandomAgent(), None)
     game_rules = GameRules(should_remove_opponents_dice=True)
-    agent_trainer.train_agents(
-        player_1, player_2, game_rules, episodes=50 * 1000 * 1000
-    )
+    agent_trainer.train_agents(player_1, player_2, game_rules, episodes=1)
 
 
 # python -c 'from training import trainer_runner; trainer_runner.deep_q_full_game_vs_random_double_state()'
 def deep_q_full_game_vs_random_double_state():
     player_1 = PlayingAgent(
         DeepQLearningAgent(
-            state_size=(63 + 63 + 6) * 2,
             nickname="Two Brain Cells",
         ),
         rm.calculate_for_multiples_and_removals_score,
@@ -103,10 +103,9 @@ def deep_q_tuned_vs_random():
     parametrized_reward_model = rm.ParametrizedRewardModel(
         reward_loss_amount=-100,
         reward_win_amount=100,
-        reward_score_increase_multiplier=0.001,
-        reward_score_diff_multiplier=0.01,
-        reward_score_incerease_multiplier_multiplier=0.001,
-        reward_opponent_score_decrease_multiplier_multiplier=0.001,
+        reward_score_increase_multiplier=0.1,
+        reward_score_incerease_multiplier_multiplier=0.1,
+        reward_opponent_score_decrease_multiplier_multiplier=0.1,
     )
     player_1 = PlayingAgent(
         DeepQLearningAgent(
@@ -118,7 +117,6 @@ def deep_q_tuned_vs_random():
             batch_size=64,
             memory_size=100000,
             target_update=10000,
-            state_size=19,
             nickname="AlphaNegativeOne",
         ),
         parametrized_reward_model.calculate_reward,
@@ -137,14 +135,12 @@ def policy_agent_vs_random():
         reward_loss_amount=-100,
         reward_win_amount=100,
         reward_score_increase_multiplier=0.001,
-        reward_score_diff_multiplier=0.01,
         reward_score_incerease_multiplier_multiplier=0.001,
         reward_opponent_score_decrease_multiplier_multiplier=0.001,
     )
     player_1 = PlayingAgent(
         PolicyGradientAgent(
             learning_rate=0.001,
-            state_size=19,
             nickname="Policier",
         ),
         parametrized_reward_model.calculate_reward,
@@ -157,11 +153,59 @@ def policy_agent_vs_random():
     )
 
 
+# python -c 'from training import trainer_runner; trainer_runner.policy_agent_pretraining_vs_random()'
+def policy_agent_pretraining_vs_random():
+    parametrized_reward_model = rm.ParametrizedRewardModel(
+        reward_loss_amount=-100,
+        reward_win_amount=100,
+        reward_score_increase_multiplier=0.1,
+        reward_score_incerease_multiplier_multiplier=0.1,
+        reward_opponent_score_decrease_multiplier_multiplier=0.1,
+    )
+    player_1 = PlayingAgent(
+        PolicyGradientAgent(
+            learning_rate=0.001,
+            nickname="Cadet Policier",
+        ),
+        parametrized_reward_model.calculate_reward,
+        "policy_gradient_pretrained_vs_random_gpu",
+    )
+    player_2 = PlayingAgent(RandomAgent(), None)
+    game_rules = GameRules(should_remove_opponents_dice=False)
+    agent_trainer.train_agents(
+        player_1, player_2, game_rules, episodes=100 * 1000 * 1000
+    )
+
+
+# python -c 'from training import trainer_runner; trainer_runner.policy_agent_posttraining_vs_random()'
+def policy_agent_posttraining_vs_random():
+    parametrized_reward_model = rm.ParametrizedRewardModel(
+        reward_loss_amount=-100,
+        reward_win_amount=100,
+        reward_score_increase_multiplier=0.01,
+        reward_score_incerease_multiplier_multiplier=0.01,
+        reward_opponent_score_decrease_multiplier_multiplier=0.01,
+    )
+    player_1 = PlayingAgent(
+        PolicyGradientAgent(
+            learning_rate=0.001,
+            entropy=0.001,
+            nickname="Seargant Policier",
+        ),
+        parametrized_reward_model.calculate_reward,
+        "policy_gradient_pretrained_vs_random_gpu",
+    )
+    player_2 = PlayingAgent(RandomAgent(), None)
+    game_rules = GameRules(should_remove_opponents_dice=True)
+    agent_trainer.train_agents(
+        player_1, player_2, game_rules, episodes=100 * 1000 * 1000
+    )
+
+
 # python -c 'from training import trainer_runner; trainer_runner.deep_q_full_game_vs_random_qucik_learner()'
 def deep_q_full_game_vs_random_qucik_learner():
     player_1 = PlayingAgent(
         DeepQLearningAgent(
-            state_size=(63 + 63 + 6),
             nickname="Only need two brain cells if they're quick",
             exploration_rate=1.0,
             exploration_decay=0.9999,
@@ -209,7 +253,6 @@ def train_simple_selective_memory_vs_random():
     parametrized_reward_model = rm.ParametrizedRewardModel(
         reward_win_amount=100,
         reward_score_increase_multiplier=0.1,
-        reward_score_diff_multiplier=0.1,
         reward_score_incerease_multiplier_multiplier=0.1,
         reward_opponent_score_decrease_multiplier_multiplier=0.01,
     )
